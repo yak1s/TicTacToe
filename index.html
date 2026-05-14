@@ -24,7 +24,7 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            height: 100dvh; /* Dynamic Viewport Height prevents mobile cropping */
+            height: 100dvh; /* Enforce dynamic viewport height */
             width: 100vw;
             display: flex; flex-direction: column;
             overflow: hidden; touch-action: manipulation;
@@ -35,7 +35,7 @@
             padding: 12px 20px;
             display: flex; justify-content: space-between; align-items: center;
             background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-            z-index: 10; font-weight: 700; flex-shrink: 0;
+            z-index: 10; font-weight: 700; flex-shrink: 0; /* Prevents HUDs from squishing */
         }
         
         .player-info { display: flex; flex-direction: column; }
@@ -76,18 +76,30 @@
         .btn-icon.active { background: var(--text-color); color: #fff; }
         .btn-icon.danger:hover { background: #FEE2E2; color: var(--o-color); }
 
-        /* --- Game Board (Anti-Cropping Flex Model) --- */
+        /* --- Game Board (Anti-Stretch & Anti-Crop Architecture) --- */
         #game-area {
-            flex: 1 1 0; min-height: 0; min-width: 0;
+            flex: 1 1 0; /* Grow exactly into available space */
+            min-height: 0; min-width: 0;
             display: flex; justify-content: center; align-items: center;
             position: relative; perspective: 1000px; padding: 15px;
         }
 
         #board-wrapper {
-            height: 100%; aspect-ratio: 1 / 1; 
-            max-width: 100%; max-height: 100%;
-            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            /* Pure geometric boundaries */
+            height: min(100%, 650px);
+            width: min(100%, 650px);
+            aspect-ratio: 1 / 1;
+            
             position: relative;
+            transform-origin: center center; /* Kept permanently centered to prevent flashing */
+            transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+            
+            /* Enforce Hardware Acceleration */
+            will-change: transform;
+            -webkit-transform: translate3d(0,0,0);
+            transform: translate3d(0,0,0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         .macro-board {
@@ -118,21 +130,24 @@
         }
         @media (hover: hover) { .micro-board.active .cell:empty:hover { background-color: #E2E8F0; } }
 
-        /* --- SVG Drawing & Win Line --- */
+        /* --- SVG Drawing & Marker Win Line --- */
         .symbol { width: 75%; height: 75%; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; fill: none; }
         .symbol.x { stroke: var(--x-color); }
         .symbol.o { stroke: var(--o-color); }
         .pop-anim { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transform: scale(0); }
 
+        /* Slower, beautiful marker drawn line */
         #win-line-svg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 10; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));
+            z-index: 10; pointer-events: none; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
         }
         
         .strike-line {
-            stroke: var(--text-color); stroke-width: 18; stroke-linecap: round;
-            stroke-dasharray: 2000; stroke-dashoffset: 2000;
-            animation: drawStrike 1.2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+            stroke: var(--text-color); 
+            stroke-width: 4; /* Scaled precisely to the 100x100 viewBox */
+            stroke-linecap: round;
+            stroke-dasharray: 150; 
+            stroke-dashoffset: 150;
         }
 
         .macro-win-overlay {
@@ -228,7 +243,6 @@
         .tut-cell.highlight-x { background: var(--x-color); }
         .tut-arrow { font-size: 1.8rem; color: #94A3B8; font-weight: 900; }
         
-        /* Accurately drawn 81-square macro board for tutorial */
         .tut-macro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; background: var(--text-color); padding: 4px; border-radius: 6px; width: 85px; height: 85px; }
         .tut-micro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--grid-dark); padding: 1px; border-radius: 2px; }
         .tut-micro div { background: var(--bg-color); border-radius: 1px; }
@@ -245,7 +259,6 @@
             #hud-top { border-right: 1px solid #E2E8F0; }
             #hud-bottom { border-left: 1px solid #E2E8F0; }
             .controls { margin-top: auto; padding-top: 20px; width: 100%; justify-content: center; }
-            #board-wrapper { width: 80vmin; height: 80vmin; }
         }
     </style>
 </head>
@@ -285,7 +298,8 @@
     <div id="game-area">
         <div id="board-wrapper">
             <div class="macro-board" id="macro-board"></div>
-            <svg id="win-line-svg"><line id="win-line" class="strike-line" x1="0" y1="0" x2="0" y2="0" stroke-opacity="0"/></svg>
+            <!-- Marker-Style Win Line (Exact 100x100 viewBox scaling) -->
+            <svg id="win-line-svg" viewBox="0 0 100 100" preserveAspectRatio="none"><line id="win-line" class="strike-line" x1="0" y1="0" x2="0" y2="0" stroke-opacity="0"/></svg>
         </div>
     </div>
 
@@ -454,7 +468,7 @@ let timerInterval = null;
 let peer = null;
 let conn = null;
 
-const PEER_PREFIX = 'ult-ttt-prod-v4-';
+const PEER_PREFIX = 'ult-ttt-prod-v5-';
 const peerConfig = { config: { iceServers: [ { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' } ] } };
 
 const boardEl = document.getElementById('macro-board');
@@ -578,7 +592,7 @@ function getSVG(symbol) {
 function updateHUD() {
     if (gameMode === 'menu') return;
     
-    // Dynamic Identity Assigment
+    // Identity Lock: Bottom is always X in local. Online, Bottom is always YOU.
     let bottomPlayer, topPlayer;
     if (gameMode === 'local') {
         bottomPlayer = 'X'; 
@@ -655,7 +669,7 @@ function updateUI() {
             microEl.classList.add('won');
             if(!overlay.innerHTML) overlay.innerHTML = getSVG(macroBoard[m]);
             
-            // STRICT RULES: Allow clicking through the overlay if board still has space
+            // STRICT RULES: Click-through won boards if they still have space
             if (isStrictRules && hasEmptyCells(m)) overlay.classList.add('strict-pass');
             else overlay.classList.remove('strict-pass');
             
@@ -677,7 +691,7 @@ function updateUI() {
     // Smart Wait-State Zooming (only zoom if it is YOUR turn)
     const isMyTurn = (gameMode === 'local' || currentPlayer === mySymbol);
     if (selectedMacro !== -1 && !isGameOver && isMyTurn) applyZoom(selectedMacro);
-    else wrapperEl.style.transform = `scale(1) translate(0,0)`;
+    else wrapperEl.style.transform = `scale(1) translate3d(0,0,0)`;
 }
 
 document.getElementById('game-area').addEventListener('click', () => {
@@ -686,10 +700,10 @@ document.getElementById('game-area').addEventListener('click', () => {
 
 function applyZoom(m) {
     const col = m % 3; const row = Math.floor(m / 3);
-    const origins = ['top left', 'top center', 'top right', 'center left', 'center center', 'center right', 'bottom left', 'bottom center', 'bottom right'];
-    wrapperEl.style.transformOrigin = origins[m];
-    let tx = col === 0 ? 5 : col === 2 ? -5 : 0; let ty = row === 0 ? 5 : row === 2 ? -5 : 0;
-    wrapperEl.style.transform = `scale(1.35) translate(${tx}%, ${ty}%)`;
+    // Hard math translate offsets for flawless smooth zoom
+    let tx = col === 0 ? 12 : col === 2 ? -12 : 0; 
+    let ty = row === 0 ? 12 : row === 2 ? -12 : 0;
+    wrapperEl.style.transform = `scale(1.45) translate3d(${tx}%, ${ty}%, 0)`;
 }
 
 function toggleMute() {
@@ -775,8 +789,8 @@ function drawWinLine(line) {
     const start = getC(line[0]); const end = getC(line[2]);
     winLineSVG.style.animation = 'none'; void winLineSVG.offsetWidth; 
     winLineSVG.setAttribute('stroke-opacity', '1');
-    winLineSVG.setAttribute('x1', `${start.x}%`); winLineSVG.setAttribute('y1', `${start.y}%`);
-    winLineSVG.setAttribute('x2', `${end.x}%`); winLineSVG.setAttribute('y2', `${end.y}%`);
+    winLineSVG.setAttribute('x1', `${start.x}`); winLineSVG.setAttribute('y1', `${start.y}`);
+    winLineSVG.setAttribute('x2', `${end.x}`); winLineSVG.setAttribute('y2', `${end.y}`);
     winLineSVG.style.animation = 'drawStrike 1.2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards';
 }
 
@@ -1035,9 +1049,7 @@ function declineRematch() { resumeAudio(); if (conn && conn.open) conn.send({ ty
 function startLocalPlay(isRematch=false) {
     resumeAudio(); clearState(); gameMode = 'local';
     let n = document.getElementById('input-player-name').value.trim();
-    names.X = n ? n : 'Player X'; names.O = n ? n : 'Player O'; // Name doesn't append (X) if left blank
-    if (n) { names.X += ' (X)'; names.O += ' (O)'; }
-    
+    names.X = n ? n + " (X)" : 'Player X'; names.O = n ? n + " (O)" : 'Player O';
     isStrictRules = document.getElementById('toggle-strict').checked; isBlitzMode = document.getElementById('toggle-timer').checked;
     hideOverlays(); document.getElementById('connection-status').style.display = 'none'; resetGame(isRematch);
 }
