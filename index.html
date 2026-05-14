@@ -82,12 +82,13 @@
             min-height: 0; min-width: 0;
             display: flex; justify-content: center; align-items: center;
             position: relative; perspective: 1000px; padding: 15px;
+            container-type: size; /* ADDED: Enables container queries for flawless square */
         }
 
         #board-wrapper {
-            /* Pure geometric boundaries */
-            height: min(100%, 650px);
-            width: min(100%, 650px);
+            /* Updated boundaries to guarantee a square */
+            width: min(100cqw, 100cqh, 650px);
+            height: min(100cqw, 100cqh, 650px);
             aspect-ratio: 1 / 1;
             
             position: relative;
