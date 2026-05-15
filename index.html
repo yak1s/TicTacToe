@@ -445,7 +445,31 @@ let peer = null;
 let conn = null;
 
 const PEER_PREFIX = 'ult-ttt-prod-v5-';
-const peerConfig = { config: { iceServers: [ { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' } ] } };
+
+// ADDED: Fallback TURN servers to bridge connections across strict NATs and international ISPs
+const peerConfig = {
+    config: {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            {
+                urls: "turn:openrelay.metered.ca:80",
+                username: "openrelayproject",
+                credential: "openrelayproject"
+            },
+            {
+                urls: "turn:openrelay.metered.ca:443",
+                username: "openrelayproject",
+                credential: "openrelayproject"
+            },
+            {
+                urls: "turn:openrelay.metered.ca:443?transport=tcp",
+                username: "openrelayproject",
+                credential: "openrelayproject"
+            }
+        ]
+    }
+};
 
 const boardEl = document.getElementById('macro-board');
 const wrapperEl = document.getElementById('board-wrapper');
@@ -892,8 +916,6 @@ function handleDisconnect() {
     }, 2500);
 }
 
-// NEW: Instantly bind network packet listeners to prevent "dropped packets" 
-// during the milliseconds it takes for the connection to fully open.
 function bindDataListeners() {
     conn.on('close', () => { if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); handleDisconnect(); } });
     conn.on('error', () => { if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); handleDisconnect(); } });
@@ -965,7 +987,7 @@ function tryHost(existingCode = null) {
     
     peer.on('connection', (connection) => { 
         conn = connection; 
-        bindDataListeners(); // Listen instantly so we never miss `join_info`
+        bindDataListeners(); 
         
         const onReady = () => {
             setupConnection(); 
@@ -1013,7 +1035,7 @@ function tryJoinReconnect(isFirstTime = false) {
         peer = new Peer(peerConfig);
         peer.on('open', () => {
             conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
-            bindDataListeners(); // Listen instantly so we never miss `init_game`
+            bindDataListeners(); 
             
             conn.on('open', () => {
                 isConnecting = false;
