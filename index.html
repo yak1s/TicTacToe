@@ -24,7 +24,7 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            height: 100dvh; /* Enforce dynamic viewport height */
+            height: 100dvh; 
             width: 100vw;
             display: flex; flex-direction: column;
             overflow: hidden; touch-action: manipulation;
@@ -35,7 +35,7 @@
             padding: 12px 20px;
             display: flex; justify-content: space-between; align-items: center;
             background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-            z-index: 10; font-weight: 700; flex-shrink: 0; /* Prevents HUDs from squishing */
+            z-index: 10; font-weight: 700; flex-shrink: 0; 
         }
         
         .player-info { display: flex; flex-direction: column; }
@@ -49,16 +49,6 @@
         /* Inactive Player Dimming */
         .player-wrap { display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; }
         .inactive-player { opacity: 0.35; filter: grayscale(80%); }
-
-        .active-indicator {
-            width: 10px; height: 10px; border-radius: 50%; background: transparent;
-            transition: all 0.3s ease; transform: scale(0);
-        }
-        .is-active .active-indicator { 
-            background: #10B981; 
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.6); 
-            transform: scale(1);
-        }
 
         #connection-status { position: fixed; top: 12px; right: 12px; width: 12px; height: 12px; border-radius: 50%; background: #94A3B8; z-index: 100; transition: background 0.3s; }
         #connection-status.connected { background: #10B981; }
@@ -78,24 +68,22 @@
 
         /* --- Game Board (Anti-Stretch & Anti-Crop Architecture) --- */
         #game-area {
-            flex: 1 1 0; /* Grow exactly into available space */
+            flex: 1 1 0; 
             min-height: 0; min-width: 0;
             display: flex; justify-content: center; align-items: center;
             position: relative; perspective: 1000px; padding: 15px;
-            container-type: size; /* ADDED: Enables container queries for flawless square */
+            container-type: size; 
         }
 
         #board-wrapper {
-            /* Updated boundaries to guarantee a square */
             width: min(100cqw, 100cqh, 650px);
             height: min(100cqw, 100cqh, 650px);
             aspect-ratio: 1 / 1;
             
             position: relative;
-            transform-origin: center center; /* Kept permanently centered to prevent flashing */
+            transform-origin: center center; 
             transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
             
-            /* Enforce Hardware Acceleration */
             will-change: transform;
             -webkit-transform: translate3d(0,0,0);
             transform: translate3d(0,0,0);
@@ -137,7 +125,6 @@
         .symbol.o { stroke: var(--o-color); }
         .pop-anim { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transform: scale(0); }
 
-        /* Slower, beautiful marker drawn line */
         #win-line-svg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 10; pointer-events: none; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
@@ -145,7 +132,7 @@
         
         .strike-line {
             stroke: var(--text-color); 
-            stroke-width: 4; /* Scaled precisely to the 100x100 viewBox */
+            stroke-width: 4; 
             stroke-linecap: round;
             stroke-dasharray: 150; 
             stroke-dashoffset: 150;
@@ -160,7 +147,6 @@
         .micro-board.won .macro-win-overlay { opacity: 1; pointer-events: auto; }
         .macro-win-overlay .symbol { width: 85%; height: 85%; stroke-width: 10; }
 
-        /* STRICT RULES OVERRIDE */
         .macro-win-overlay.strict-pass {
             pointer-events: none !important; 
             background: transparent !important; 
@@ -267,17 +253,15 @@
 
     <div id="connection-status" title="Connection Status" style="display:none;"></div>
 
-    <!-- HUD TOP (Opponent + Controls) -->
     <div class="hud" id="hud-top">
         <div class="player-wrap" id="player-wrap-top">
             <div class="hud-symbol" id="symbol-top">O <span class="hud-score">(<span id="score-top">0</span>)</span></div>
             <div class="player-info" id="info-top">
-                <div class="player-name" id="name-top"><span id="text-name-top">Player O</span><span class="active-indicator"></span></div>
+                <div class="player-name" id="name-top"><span id="text-name-top">Player O</span></div>
                 <div class="timer" id="time-top">00:00</div>
             </div>
         </div>
         
-        <!-- Controls always live here -->
         <div class="controls">
             <button class="btn-icon" id="btn-fullscreen" onclick="toggleFullscreen()" title="Toggle Fullscreen">
                 <svg viewBox="0 0 24 24" id="fs-enter"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
@@ -295,27 +279,23 @@
         </div>
     </div>
 
-    <!-- Game Area -->
     <div id="game-area">
         <div id="board-wrapper">
             <div class="macro-board" id="macro-board"></div>
-            <!-- Marker-Style Win Line (Exact 100x100 viewBox scaling) -->
             <svg id="win-line-svg" viewBox="0 0 100 100" preserveAspectRatio="none"><line id="win-line" class="strike-line" x1="0" y1="0" x2="0" y2="0" stroke-opacity="0"/></svg>
         </div>
     </div>
 
-    <!-- HUD BOTTOM (Me) -->
     <div class="hud" id="hud-bottom" style="justify-content: center;">
         <div class="player-wrap" id="player-wrap-bottom">
             <div class="player-info" id="info-bottom" style="align-items: flex-end;">
-                <div class="player-name" id="name-bottom"><span class="active-indicator"></span><span id="text-name-bottom">Player X</span></div>
+                <div class="player-name" id="name-bottom"><span id="text-name-bottom">Player X</span></div>
                 <div class="timer" id="time-bottom">00:00</div>
             </div>
             <div class="hud-symbol" id="symbol-bottom">X <span class="hud-score">(<span id="score-bottom">0</span>)</span></div>
         </div>
     </div>
 
-    <!-- Overlay: Main Menu -->
     <div class="overlay visible" id="overlay-menu">
         <div class="menu-bg"></div>
         <div class="modal-card">
@@ -342,7 +322,6 @@
         </div>
     </div>
 
-    <!-- Overlay: Tutorial -->
     <div class="overlay" id="overlay-tutorial">
         <div class="modal-card tutorial-card">
             <h2 style="color: var(--text-color); text-align: center; margin-bottom: 15px; font-weight: 900;">How to Play</h2>
@@ -381,7 +360,6 @@
         </div>
     </div>
 
-    <!-- Overlay: Join -->
     <div class="overlay" id="overlay-join">
         <div class="modal-card">
             <h2>Join Match</h2>
@@ -393,7 +371,6 @@
         </div>
     </div>
 
-    <!-- Overlay: Waiting Room -->
     <div class="overlay" id="overlay-waiting">
         <div class="modal-card" style="align-items: center;">
             <h2>Room Code</h2>
@@ -404,7 +381,6 @@
         </div>
     </div>
 
-    <!-- Overlay: Connection Lost / Reconnecting -->
     <div class="overlay" id="overlay-reconnect" style="backdrop-filter: var(--blur-heavy); -webkit-backdrop-filter: var(--blur-heavy);">
         <div class="modal-card" style="align-items: center; border-color: var(--o-color);">
             <h2 style="font-size: 2rem; color: var(--text-color); text-align: center;">Connection Lost</h2>
@@ -414,7 +390,6 @@
         </div>
     </div>
 
-    <!-- Overlay: Pause -->
     <div class="overlay" id="overlay-pause" style="backdrop-filter: var(--blur-heavy); -webkit-backdrop-filter: var(--blur-heavy);">
         <div class="modal-card" style="align-items: center; border-color: var(--x-color);">
             <h2 style="font-size: 2.5rem; color: var(--text-color);">PAUSED</h2>
@@ -423,7 +398,6 @@
         </div>
     </div>
 
-    <!-- Overlay: Message / Result -->
     <div class="overlay" id="overlay-message">
         <div class="modal-card" style="align-items: center;">
             <h2 id="msg-title" style="font-size: 2.2rem; margin-bottom: 0;">Title</h2>
@@ -455,6 +429,7 @@ let roomCode = '';
 
 // Network Timers
 let isDisconnected = false;
+let isConnecting = false;
 let lastHeartbeat = Date.now();
 let heartbeatInterval = null;
 let disconnectGraceTimeout = null;
@@ -520,19 +495,23 @@ function saveState() {
     } catch(e) {}
 }
 
-function loadState() {
+function loadState(stateString = null) {
     try {
-        const s = localStorage.getItem('ult_ttt_state');
+        const s = stateString || localStorage.getItem('ult_ttt_state');
         if (!s) return false;
         const state = JSON.parse(s);
         board = state.board; macroBoard = state.macroBoard;
         activeMacro = state.activeMacro; selectedMacro = state.selectedMacro;
         currentPlayer = state.currentPlayer; startingPlayer = state.startingPlayer;
-        mySymbol = state.mySymbol; gameMode = state.gameMode;
         isStrictRules = state.isStrictRules; isBlitzMode = state.isBlitzMode;
         sessionScores = state.sessionScores; names = state.names;
-        timers = state.timers; roomCode = state.roomCode;
-        isPaused = state.isPaused;
+        timers = state.timers; isPaused = state.isPaused;
+        
+        if (!stateString) {
+            mySymbol = state.mySymbol; 
+            gameMode = state.gameMode;
+            roomCode = state.roomCode;
+        }
         return true;
     } catch(e) { return false; }
 }
@@ -541,6 +520,18 @@ function clearState() {
     try { localStorage.removeItem('ult_ttt_state'); } catch(e) {}
     gameMode = 'menu'; roomCode = ''; selectedMacro = -1; activeMacro = -1;
 }
+
+// FIX 4: Visibility API to handle mobile browser backgrounding 
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        // We just came back from the background. Reset the heartbeat so we 
+        // don't instantly timeout, and send a rescue pulse if connected.
+        lastHeartbeat = Date.now();
+        if (conn && conn.open) {
+            conn.send({ type: 'pong' }); 
+        }
+    }
+});
 
 // ==========================================
 // 3. UI, DYNAMIC HUD & FULLSCREEN
@@ -593,7 +584,6 @@ function getSVG(symbol) {
 function updateHUD() {
     if (gameMode === 'menu') return;
     
-    // Identity Lock: Bottom is always X in local. Online, Bottom is always YOU.
     let bottomPlayer, topPlayer;
     if (gameMode === 'local') {
         bottomPlayer = 'X'; 
@@ -604,14 +594,12 @@ function updateHUD() {
         document.getElementById('connection-status').style.display = 'block';
     }
 
-    // Toggle Inactive State Dimming
     document.getElementById('player-wrap-bottom').classList.toggle('inactive-player', currentPlayer !== bottomPlayer);
     document.getElementById('player-wrap-bottom').classList.toggle('is-active', currentPlayer === bottomPlayer);
     
     document.getElementById('player-wrap-top').classList.toggle('inactive-player', currentPlayer !== topPlayer);
     document.getElementById('player-wrap-top').classList.toggle('is-active', currentPlayer === topPlayer);
 
-    // Apply Bottom HUD 
     const symBot = document.getElementById('symbol-bottom');
     symBot.innerHTML = `${bottomPlayer} <span class="hud-score">(<span id="score-bottom">${sessionScores[bottomPlayer]}</span>)</span>`;
     symBot.style.color = `var(--${bottomPlayer.toLowerCase()}-color)`;
@@ -620,7 +608,6 @@ function updateHUD() {
     document.getElementById('text-name-bottom').innerText = names[bottomPlayer];
     document.getElementById('time-bottom').innerText = formatTime(timers[bottomPlayer]);
 
-    // Apply Top HUD 
     const symTop = document.getElementById('symbol-top');
     symTop.innerHTML = `${topPlayer} <span class="hud-score">(<span id="score-top">${sessionScores[topPlayer]}</span>)</span>`;
     symTop.style.color = `var(--${topPlayer.toLowerCase()}-color)`;
@@ -629,7 +616,6 @@ function updateHUD() {
     document.getElementById('text-name-top').innerText = names[topPlayer];
     document.getElementById('time-top').innerText = formatTime(timers[topPlayer]);
 
-    // POV Scale Sizing
     if (gameMode !== 'local') {
         document.getElementById('name-bottom').style.fontSize = '1.6em';
         document.getElementById('symbol-bottom').style.fontSize = '3.5rem';
@@ -642,7 +628,6 @@ function updateHUD() {
         document.getElementById('symbol-top').style.fontSize = '2.5rem';
     }
     
-    // Low time visualizer
     if(isBlitzMode) {
         document.getElementById('time-bottom').classList.toggle('low-time', timers[bottomPlayer] <= 30 && timers[bottomPlayer] > 0);
         document.getElementById('time-top').classList.toggle('low-time', timers[topPlayer] <= 30 && timers[topPlayer] > 0);
@@ -670,7 +655,6 @@ function updateUI() {
             microEl.classList.add('won');
             if(!overlay.innerHTML) overlay.innerHTML = getSVG(macroBoard[m]);
             
-            // STRICT RULES: Click-through won boards if they still have space
             if (isStrictRules && hasEmptyCells(m)) overlay.classList.add('strict-pass');
             else overlay.classList.remove('strict-pass');
             
@@ -689,7 +673,6 @@ function updateUI() {
     if (gameMode === 'local' && isBlitzMode && !isGameOver) pauseBtn.style.display = 'flex';
     else pauseBtn.style.display = 'none';
 
-    // Smart Wait-State Zooming (only zoom if it is YOUR turn)
     const isMyTurn = (gameMode === 'local' || currentPlayer === mySymbol);
     if (selectedMacro !== -1 && !isGameOver && isMyTurn) applyZoom(selectedMacro);
     else wrapperEl.style.transform = `scale(1) translate3d(0,0,0)`;
@@ -701,7 +684,6 @@ document.getElementById('game-area').addEventListener('click', () => {
 
 function applyZoom(m) {
     const col = m % 3; const row = Math.floor(m / 3);
-    // Hard math translate offsets for flawless smooth zoom
     let tx = col === 0 ? 12 : col === 2 ? -12 : 0; 
     let ty = row === 0 ? 12 : row === 2 ? -12 : 0;
     wrapperEl.style.transform = `scale(1.45) translate3d(${tx}%, ${ty}%, 0)`;
@@ -734,7 +716,6 @@ function handleCellClick(m, c) {
     if (selectedMacro !== m) { selectedMacro = -1; updateUI(); saveState(); return; }
     if (board[m][c] !== null) return shakeError(m, c);
 
-    // Save identity BEFORE move mutates the state!
     let moveAuthor = currentPlayer; 
     executeMove(m, c, moveAuthor);
     
@@ -747,7 +728,7 @@ function executeMove(m, c, p, syncTime = null) {
     if(p === 'X') sfx.moveX(); else sfx.moveO();
     if (isBlitzMode && timers[p] < BLITZ_START_SEC && (board.some(row => row.some(cell => cell !== null)))) timers[p] += BLITZ_INC_SEC;
     
-    if (syncTime !== null) timers[p] = syncTime; // Network clock override
+    if (syncTime !== null) timers[p] = syncTime; 
 
     board[m][c] = p;
     if (!macroBoard[m]) {
@@ -882,10 +863,12 @@ function startHeartbeat() {
         if (conn && conn.open) { conn.send({ type: 'ping' }); }
         const timeSinceLastPulse = Date.now() - lastHeartbeat;
         
-        if (timeSinceLastPulse > 5000 && !isDisconnected) {
+        // FIX 1B: Increased the disconnection tolerance from 5 seconds to 12 seconds 
+        // to prevent false flags when playing with high international ping
+        if (timeSinceLastPulse > 12000 && !isDisconnected) {
             isDisconnected = true; setStatus('disconnected'); handleDisconnect();
         } 
-        else if (timeSinceLastPulse <= 5000 && isDisconnected) {
+        else if (timeSinceLastPulse <= 12000 && isDisconnected) {
             isDisconnected = false; setStatus('connected');
             clearTimeout(disconnectGraceTimeout); clearInterval(disconnectCountdownInterval);
             hideMessage(); document.getElementById('overlay-reconnect').classList.remove('visible');
@@ -903,12 +886,17 @@ function handleDisconnect() {
         disconnectCountdownInterval = setInterval(() => {
             timeLeft--;
             document.getElementById('reconnect-time-display').innerText = timeLeft;
+            
             if(timeLeft <= 0) {
                 clearDisconnectLogic();
                 endGame(mySymbol, null, "Opponent abandoned the match!");
+            } else {
+                if (gameMode === 'join' && timeLeft % 3 === 0) {
+                    tryJoinReconnect(false);
+                }
             }
         }, 1000);
-    }, 5000);
+    }, 2500);
 }
 
 function tryHost(existingCode = null) {
@@ -923,8 +911,15 @@ function tryHost(existingCode = null) {
         } else showMessage('Error', err.message, `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false);
     });
     peer.on('connection', (connection) => { 
-        conn = connection; setupConnection(); 
-        if(existingCode) { setTimeout(() => conn.send({ type: 'sync_state', state: localStorage.getItem('ult_ttt_state') }), 500); }
+        // FIX 1A: Strictly wait for the WebRTC data channel to be physically OPEN 
+        // before attempting to start the heartbeat ping/pong engine.
+        connection.on('open', () => {
+            conn = connection; 
+            setupConnection(); 
+            if(existingCode) { 
+                conn.send({ type: 'sync_state', state: localStorage.getItem('ult_ttt_state') });
+            }
+        });
     });
 }
 
@@ -954,23 +949,37 @@ function initJoin() {
 }
 
 function tryJoinReconnect(isFirstTime = false) {
-    if(peer) peer.destroy();
-    peer = new Peer(peerConfig);
-    peer.on('open', () => {
-        conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
-        conn.on('open', () => {
-            setupConnection();
-            if(isFirstTime) conn.send({ type: 'join_info', name: names.O });
-            else { conn.send({ type: 'reconnect_ping' }); lastHeartbeat = Date.now(); }
+    if (isConnecting) return;
+    isConnecting = true;
+    try { if(peer) peer.destroy(); } catch(e){}
+    
+    setTimeout(() => {
+        peer = new Peer(peerConfig);
+        peer.on('open', () => {
+            conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
+            conn.on('open', () => {
+                isConnecting = false;
+                setupConnection();
+                if(isFirstTime) conn.send({ type: 'join_info', name: names.O });
+                else { conn.send({ type: 'reconnect_ping' }); lastHeartbeat = Date.now(); }
+            });
+            conn.on('error', () => { isConnecting = false; });
+            conn.on('close', () => { isConnecting = false; });
         });
-        if(isFirstTime) conn.on('error', () => showMessage('Error', 'Room not found.', `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false));
-    });
+        peer.on('error', () => { 
+            isConnecting = false; 
+            if(isFirstTime) showMessage('Error', 'Room not found.', `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false);
+        });
+    }, 100);
 }
 
 function setupConnection() {
     setStatus('connected'); hideMessage(); document.getElementById('overlay-reconnect').classList.remove('visible');
     startHeartbeat();
     
+    conn.on('close', () => { if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); handleDisconnect(); } });
+    conn.on('error', () => { if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); handleDisconnect(); } });
+
     conn.on('data', (data) => {
         switch(data.type) {
             case 'ping': conn.send({ type: 'pong' }); break;
@@ -987,8 +996,9 @@ function setupConnection() {
                 hideOverlays(); resetGame(); break;
             case 'sync_state':
                 if (data.state) {
-                    localStorage.setItem('ult_ttt_state', data.state);
-                    loadState(); initBoardDOM(); updateUI(); startTimers();
+                    loadState(data.state); 
+                    saveState(); 
+                    initBoardDOM(); updateUI(); startTimers();
                 }
                 break;
             case 'reconnect_ping':
@@ -1025,6 +1035,7 @@ function requestQuit() {
 
 function cancelSetup() {
     resumeAudio();
+    isConnecting = false;
     try { if (conn) { conn.close(); conn = null; } if (peer) { peer.destroy(); peer = null; } } catch(e) {}
     clearDisconnectLogic(); clearState();
     document.getElementById('input-room-code').value = ''; document.getElementById('join-error').innerText = '';
