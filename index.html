@@ -418,7 +418,7 @@ let selectedMacro = -1;
 let currentPlayer = 'X';
 let startingPlayer = 'X'; 
 let mySymbol = 'X'; 
-let gameMode = 'menu'; // 'local', 'host', 'join', 'menu'
+let gameMode = 'menu'; 
 let isStrictRules = false;
 let isBlitzMode = false;
 let isMuted = false;
@@ -521,15 +521,10 @@ function clearState() {
     gameMode = 'menu'; roomCode = ''; selectedMacro = -1; activeMacro = -1;
 }
 
-// FIX 4: Visibility API to handle mobile browser backgrounding 
 document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
-        // We just came back from the background. Reset the heartbeat so we 
-        // don't instantly timeout, and send a rescue pulse if connected.
         lastHeartbeat = Date.now();
-        if (conn && conn.open) {
-            conn.send({ type: 'pong' }); 
-        }
+        if (conn && conn.open) conn.send({ type: 'pong' }); 
     }
 });
 
@@ -863,8 +858,6 @@ function startHeartbeat() {
         if (conn && conn.open) { conn.send({ type: 'ping' }); }
         const timeSinceLastPulse = Date.now() - lastHeartbeat;
         
-        // FIX 1B: Increased the disconnection tolerance from 5 seconds to 12 seconds 
-        // to prevent false flags when playing with high international ping
         if (timeSinceLastPulse > 12000 && !isDisconnected) {
             isDisconnected = true; setStatus('disconnected'); handleDisconnect();
         } 
@@ -899,84 +892,9 @@ function handleDisconnect() {
     }, 2500);
 }
 
-function tryHost(existingCode = null) {
-    roomCode = existingCode || Math.floor(1000 + Math.random() * 9000).toString();
-    peer = new Peer(PEER_PREFIX + roomCode, peerConfig);
-    peer.on('open', () => { document.getElementById('display-room-code').innerText = roomCode; });
-    peer.on('error', (err) => {
-        if(err.type === 'unavailable-id') { 
-            peer.destroy(); 
-            if(existingCode) setTimeout(() => tryHost(existingCode), 2000); 
-            else tryHost(); 
-        } else showMessage('Error', err.message, `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false);
-    });
-    peer.on('connection', (connection) => { 
-        // FIX 1A: Strictly wait for the WebRTC data channel to be physically OPEN 
-        // before attempting to start the heartbeat ping/pong engine.
-        connection.on('open', () => {
-            conn = connection; 
-            setupConnection(); 
-            if(existingCode) { 
-                conn.send({ type: 'sync_state', state: localStorage.getItem('ult_ttt_state') });
-            }
-        });
-    });
-}
-
-function initHost() {
-    resumeAudio(); clearState();
-    let n = document.getElementById('input-player-name').value.trim();
-    names.X = n ? n : 'Player X';
-    names.O = 'Player O'; 
-    isStrictRules = document.getElementById('toggle-strict').checked; isBlitzMode = document.getElementById('toggle-timer').checked;
-    gameMode = 'host'; mySymbol = 'X';
-    hideOverlays(); document.getElementById('overlay-waiting').classList.add('visible'); tryHost();
-}
-
-function showJoinMenu() { resumeAudio(); hideOverlays(); document.getElementById('overlay-join').classList.add('visible'); }
-function showTutorial() { resumeAudio(); hideOverlays(); document.getElementById('overlay-tutorial').classList.add('visible'); }
-function closeTutorial() { resumeAudio(); hideOverlays(); document.getElementById('overlay-menu').classList.add('visible'); }
-
-function initJoin() {
-    resumeAudio(); clearState();
-    const code = document.getElementById('input-room-code').value.trim();
-    if (!/^\d{4}$/.test(code)) return document.getElementById('join-error').innerText = "Enter a 4-digit code.";
-    let n = document.getElementById('input-player-name').value.trim();
-    names.O = n ? n : 'Player O';
-    gameMode = 'join'; mySymbol = 'O'; roomCode = code;
-    hideOverlays(); showMessage('Connecting...', 'Finding host...', '', false);
-    tryJoinReconnect(true); 
-}
-
-function tryJoinReconnect(isFirstTime = false) {
-    if (isConnecting) return;
-    isConnecting = true;
-    try { if(peer) peer.destroy(); } catch(e){}
-    
-    setTimeout(() => {
-        peer = new Peer(peerConfig);
-        peer.on('open', () => {
-            conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
-            conn.on('open', () => {
-                isConnecting = false;
-                setupConnection();
-                if(isFirstTime) conn.send({ type: 'join_info', name: names.O });
-                else { conn.send({ type: 'reconnect_ping' }); lastHeartbeat = Date.now(); }
-            });
-            conn.on('error', () => { isConnecting = false; });
-            conn.on('close', () => { isConnecting = false; });
-        });
-        peer.on('error', () => { 
-            isConnecting = false; 
-            if(isFirstTime) showMessage('Error', 'Room not found.', `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false);
-        });
-    }, 100);
-}
-
-function setupConnection() {
-    setStatus('connected'); hideMessage(); document.getElementById('overlay-reconnect').classList.remove('visible');
-    startHeartbeat();
-    
+// NEW: Instantly bind network packet listeners to prevent "dropped packets" 
+// during the milliseconds it takes for the connection to fully open.
+function bindDataListeners() {
     conn.on('close', () => { if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); handleDisconnect(); } });
     conn.on('error', () => { if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); handleDisconnect(); } });
 
@@ -1024,6 +942,93 @@ function setupConnection() {
                 break;
         }
     });
+}
+
+function setupConnection() {
+    setStatus('connected'); 
+    hideMessage(); 
+    document.getElementById('overlay-reconnect').classList.remove('visible');
+    startHeartbeat();
+}
+
+function tryHost(existingCode = null) {
+    roomCode = existingCode || Math.floor(1000 + Math.random() * 9000).toString();
+    peer = new Peer(PEER_PREFIX + roomCode, peerConfig);
+    peer.on('open', () => { document.getElementById('display-room-code').innerText = roomCode; });
+    peer.on('error', (err) => {
+        if(err.type === 'unavailable-id') { 
+            peer.destroy(); 
+            if(existingCode) setTimeout(() => tryHost(existingCode), 2000); 
+            else tryHost(); 
+        } else showMessage('Error', err.message, `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false);
+    });
+    
+    peer.on('connection', (connection) => { 
+        conn = connection; 
+        bindDataListeners(); // Listen instantly so we never miss `join_info`
+        
+        const onReady = () => {
+            setupConnection(); 
+            if(existingCode) { 
+                conn.send({ type: 'sync_state', state: localStorage.getItem('ult_ttt_state') });
+            }
+        };
+        
+        if (conn.open) onReady();
+        else conn.on('open', onReady);
+    });
+}
+
+function initHost() {
+    resumeAudio(); clearState();
+    let n = document.getElementById('input-player-name').value.trim();
+    names.X = n ? n : 'Player X';
+    names.O = 'Player O'; 
+    isStrictRules = document.getElementById('toggle-strict').checked; isBlitzMode = document.getElementById('toggle-timer').checked;
+    gameMode = 'host'; mySymbol = 'X';
+    hideOverlays(); document.getElementById('overlay-waiting').classList.add('visible'); tryHost();
+}
+
+function showJoinMenu() { resumeAudio(); hideOverlays(); document.getElementById('overlay-join').classList.add('visible'); }
+function showTutorial() { resumeAudio(); hideOverlays(); document.getElementById('overlay-tutorial').classList.add('visible'); }
+function closeTutorial() { resumeAudio(); hideOverlays(); document.getElementById('overlay-menu').classList.add('visible'); }
+
+function initJoin() {
+    resumeAudio(); clearState();
+    const code = document.getElementById('input-room-code').value.trim();
+    if (!/^\d{4}$/.test(code)) return document.getElementById('join-error').innerText = "Enter a 4-digit code.";
+    let n = document.getElementById('input-player-name').value.trim();
+    names.O = n ? n : 'Player O';
+    gameMode = 'join'; mySymbol = 'O'; roomCode = code;
+    hideOverlays(); showMessage('Connecting...', 'Finding host...', '', false);
+    tryJoinReconnect(true); 
+}
+
+function tryJoinReconnect(isFirstTime = false) {
+    if (isConnecting) return;
+    isConnecting = true;
+    try { if(peer) peer.destroy(); } catch(e){}
+    
+    setTimeout(() => {
+        peer = new Peer(peerConfig);
+        peer.on('open', () => {
+            conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
+            bindDataListeners(); // Listen instantly so we never miss `init_game`
+            
+            conn.on('open', () => {
+                isConnecting = false;
+                setupConnection();
+                if(isFirstTime) conn.send({ type: 'join_info', name: names.O });
+                else { conn.send({ type: 'reconnect_ping' }); lastHeartbeat = Date.now(); }
+            });
+            conn.on('error', () => { isConnecting = false; });
+            conn.on('close', () => { isConnecting = false; });
+        });
+        peer.on('error', () => { 
+            isConnecting = false; 
+            if(isFirstTime) showMessage('Error', 'Room not found.', `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false);
+        });
+    }, 100);
 }
 
 function requestQuit() {
