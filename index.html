@@ -46,7 +46,6 @@
         .hud-symbol { font-weight: 900; transition: color 0.3s ease; display: flex; align-items: baseline; gap: 5px;}
         .hud-score { font-size: 0.45em; color: #94A3B8; font-weight: 800; transform: translateY(-4px);}
 
-        /* Inactive Player Dimming */
         .player-wrap { display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; }
         .inactive-player { opacity: 0.35; filter: grayscale(80%); }
 
@@ -116,7 +115,6 @@
         }
         @media (hover: hover) { .micro-board.active .cell:empty:hover { background-color: #E2E8F0; } }
 
-        /* --- SVG Drawing & Marker Win Line --- */
         .symbol { width: 75%; height: 75%; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; fill: none; }
         .symbol.x { stroke: var(--x-color); }
         .symbol.o { stroke: var(--o-color); }
@@ -126,13 +124,9 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 10; pointer-events: none; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
         }
-        
         .strike-line {
-            stroke: var(--text-color); 
-            stroke-width: 4; 
-            stroke-linecap: round;
-            stroke-dasharray: 150; 
-            stroke-dashoffset: 150;
+            stroke: var(--text-color); stroke-width: 4; stroke-linecap: round;
+            stroke-dasharray: 150; stroke-dashoffset: 150;
         }
 
         .macro-win-overlay {
@@ -143,12 +137,7 @@
         }
         .micro-board.won .macro-win-overlay { opacity: 1; pointer-events: auto; }
         .macro-win-overlay .symbol { width: 85%; height: 85%; stroke-width: 10; }
-
-        .macro-win-overlay.strict-pass {
-            pointer-events: none !important; 
-            background: transparent !important; 
-            opacity: 0.35 !important;
-        }
+        .macro-win-overlay.strict-pass { pointer-events: none !important; background: transparent !important; opacity: 0.35 !important; }
 
         @keyframes popIn { 0% { transform: scale(0); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
         @keyframes drawStrike { to { stroke-dashoffset: 0; } }
@@ -156,7 +145,6 @@
         .shake { animation: shake 0.25s both; }
         @keyframes pulse-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
         .loader { border: 4px solid #E2E8F0; border-top: 4px solid var(--text-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 10px auto; }
 
         /* --- Overlays --- */
@@ -217,22 +205,7 @@
         .huge-code { font-size: 4rem; font-weight: 900; letter-spacing: 10px; color: var(--x-color); margin: 10px 0; }
         .error-text { color: var(--o-color); font-size: 0.95rem; min-height: 20px; font-weight: 700; margin-top: -10px; }
 
-        /* --- Tutorial Graphics --- */
-        .tutorial-card { max-height: 85vh; overflow-y: auto; text-align: left; padding: 30px; }
-        .tutorial-card p { margin-bottom: 8px; color: #475569; font-size: 0.95rem; line-height: 1.5; font-weight: 600; }
-        .tutorial-grid { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 15px 0; }
-        .tut-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--text-color); padding: 3px; border-radius: 4px; width: 64px; height: 64px; }
-        .tut-cell { background: #fff; border-radius: 1px; }
-        .tut-cell.highlight-x { background: var(--x-color); }
-        .tut-arrow { font-size: 1.8rem; color: #94A3B8; font-weight: 900; }
-        .tut-macro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; background: var(--text-color); padding: 4px; border-radius: 6px; width: 85px; height: 85px; }
-        .tut-micro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--grid-dark); padding: 1px; border-radius: 2px; }
-        .tut-micro div { background: var(--bg-color); border-radius: 1px; }
-        .tut-micro.highlight-board { background: var(--o-color); box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.4); z-index: 2; position: relative;}
-        .tut-micro.highlight-board div { opacity: 0.7; }
-        ul.tut-list { margin-left: 20px; font-size: 0.9rem; color: #475569; margin-bottom: 15px; font-weight: 600; line-height: 1.5; }
-        ul.tut-list li { margin-bottom: 8px; }
-
+        /* Desktop Layout */
         @media (min-width: 768px) and (orientation: landscape) {
             body { flex-direction: row; }
             .hud { flex-direction: column; width: 320px; padding: 40px 30px; border-radius: 0; border: none; box-shadow: 4px 0 20px rgba(0,0,0,0.03); z-index: 20;}
@@ -298,7 +271,7 @@
             
             <div style="margin: 5px 0;">
                 <div class="setting-row">
-                    <span>Blitz Timer (5m + 5s)</span>
+                    <span>Blitz Timer (4m + 5s)</span>
                     <label class="switch"><input type="checkbox" id="toggle-timer"><span class="slider"></span></label>
                 </div>
                 <div class="setting-row" style="padding-bottom: 0;">
@@ -312,44 +285,6 @@
             <button class="btn secondary" onclick="showJoinMenu()">Join via Code</button>
             <div style="border-top: 1px solid #E2E8F0; margin: 2px 0;"></div>
             <button class="btn secondary" style="background: transparent; border: 2px dashed #CBD5E1;" onclick="startLocalPlay()">Pass & Play (Local)</button>
-            <button class="btn secondary" style="font-size: 0.9rem; padding: 10px;" onclick="showTutorial()">📖 How to Play</button>
-        </div>
-    </div>
-
-    <!-- TUTORIAL OVERLAY -->
-    <div class="overlay" id="overlay-tutorial">
-        <div class="modal-card tutorial-card">
-            <h2 style="color: var(--text-color); text-align: center; margin-bottom: 15px; font-weight: 900;">How to Play</h2>
-            <p><strong>1. The Grid:</strong> The game is played on a giant 3x3 board, where each square contains a smaller 3x3 board.</p>
-            <p style="margin-top: 15px;"><strong>2. The Catch (The Core Rule):</strong> You do not get to pick which small board you play in. <strong>Your opponent's previous move dictates your current board.</strong></p>
-            <div class="tutorial-grid">
-                <div class="tut-box">
-                    <div class="tut-cell"></div><div class="tut-cell"></div><div class="tut-cell highlight-x"></div>
-                    <div class="tut-cell"></div><div class="tut-cell"></div><div class="tut-cell"></div>
-                    <div class="tut-cell"></div><div class="tut-cell"></div><div class="tut-cell"></div>
-                </div>
-                <div class="tut-arrow">➜</div>
-                <div class="tut-macro">
-                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-                    <div class="tut-micro highlight-board"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-                </div>
-            </div>
-            <p style="font-size: 0.85rem; text-align: center; margin-top:-5px; margin-bottom: 20px;"><em>Playing in the top-right square sends your opponent to the top-right board.</em></p>
-            <p><strong>3. Winning a Board:</strong> Get 3-in-a-row in a small board to win it. That board counts as a giant X or O for the main game.</p>
-            <p style="margin-top: 15px;"><strong>4. The Wildcard:</strong> What happens if you are sent to a board that is already won or completely full?</p>
-            <ul class="tut-list">
-                <li><strong>Standard:</strong> You get a free turn! You can play your next move <strong>anywhere</strong> on the giant board.</li>
-                <li><strong>Strict Rules:</strong> You <strong>MUST</strong> still play in that specific board if it has empty squares left, even if it is already won. You only get a free move if the board is completely full.</li>
-            </ul>
-            <p><strong>5. Winning the Game:</strong> Win 3 small boards in a row on the giant board to win it all!</p>
-            <button class="btn primary" style="margin-top: 10px;" onclick="closeTutorial()">Got it!</button>
         </div>
     </div>
 
@@ -376,7 +311,7 @@
         </div>
     </div>
 
-    <!-- IDLE WARNING OVERLAY (NEW) -->
+    <!-- IDLE WARNING OVERLAY -->
     <div class="overlay" id="overlay-idle" style="backdrop-filter: var(--blur-heavy); -webkit-backdrop-filter: var(--blur-heavy); z-index: 2000;">
         <div class="modal-card" style="align-items: center; border-color: var(--o-color);">
             <h2 style="font-size: 2.2rem; color: var(--o-color); text-align: center;">Are you there?</h2>
@@ -393,6 +328,7 @@
             <p style="color:#64748B; margin-bottom: 5px; font-weight: 700; text-align: center;">Waiting for opponent to reconnect...</p>
             <div style="font-size: 3.5rem; font-weight: 900; color: var(--o-color); margin: 10px 0;" id="reconnect-time-display">60</div>
             <button class="btn danger" onclick="explicitQuit(true)">Forfeit & Quit</button>
+            <button class="btn secondary" style="margin-top: 10px; border-color: var(--o-color); color: var(--o-color); font-size: 0.9rem;" onclick="copyErrorReport()">📋 Copy Error Report</button>
         </div>
     </div>
 
@@ -416,6 +352,48 @@
 
 <script>
 // ==========================================
+// 0. DIAGNOSTIC LOGGING ENGINE (NEW)
+// ==========================================
+const debugLog = [];
+function logEvent(system, message) {
+    const time = new Date().toISOString().split('T')[1].split('.')[0];
+    const entry = `[${time}] [${system}] ${message}`;
+    debugLog.push(entry);
+    if (debugLog.length > 50) debugLog.shift(); 
+    console.log(entry);
+}
+
+function generateErrorReport() {
+    const report = {
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        gameState: {
+            mode: gameMode, roomCode: roomCode, currentPlayer: currentPlayer, 
+            mySymbol: mySymbol, paused: isPaused, activeMacro: activeMacro,
+            timers: timers, rules: isStrictRules ? 'Strict' : 'Standard'
+        },
+        networkState: {
+            peerID: peer ? peer.id : null,
+            peerDestroyed: peer ? peer.destroyed : null,
+            peerDisconnected: peer ? peer.disconnected : null,
+            connOpen: conn ? conn.open : null,
+            timeSinceHeartbeatMs: Date.now() - lastHeartbeat
+        },
+        events: debugLog
+    };
+    return JSON.stringify(report, null, 2);
+}
+
+function copyErrorReport() {
+    const reportStr = generateErrorReport();
+    navigator.clipboard.writeText(reportStr).then(() => {
+        alert("Error report copied to clipboard! Please send this to the developer.");
+    }).catch(err => {
+        prompt("Could not auto-copy. Please manually copy the text below:", reportStr);
+    });
+}
+
+// ==========================================
 // 1. STATE & CORE VARIABLES
 // ==========================================
 let board = Array(9).fill(null).map(() => Array(9).fill(null)); 
@@ -435,7 +413,7 @@ let sessionScores = { X: 0, O: 0 };
 let names = { X: 'Player X', O: 'Player O' };
 let roomCode = '';
 
-const BLITZ_START_SEC = 5 * 60; 
+const BLITZ_START_SEC = 4 * 60; // UPDATED to 4 minutes
 const BLITZ_INC_SEC = 5;        
 let timers = { X: 0, O: 0 };
 
@@ -456,15 +434,11 @@ let idleCountdown = 60;
 
 const PEER_PREFIX = 'ult-ttt-prod-v5-';
 
-// ADDED: Robust cross-continent STUN/TURN fallback servers
 const peerConfig = {
     config: {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' },
-            { urls: 'stun:stun3.l.google.com:19302' },
-            { urls: 'stun:stun4.l.google.com:19302' },
             {
                 urls: "turn:openrelay.metered.ca:80",
                 username: "openrelayproject",
@@ -472,11 +446,6 @@ const peerConfig = {
             },
             {
                 urls: "turn:openrelay.metered.ca:443",
-                username: "openrelayproject",
-                credential: "openrelayproject"
-            },
-            {
-                urls: "turn:openrelay.metered.ca:443?transport=tcp",
                 username: "openrelayproject",
                 credential: "openrelayproject"
             }
@@ -492,7 +461,6 @@ const winLineSVG = document.getElementById('win-line');
 // ==========================================
 // 2. BACKGROUND-PROOF METRONOME (WEB WORKER)
 // ==========================================
-// This completely replaces setInterval to ensure background tabs don't desync timers or drop WebRTC
 const workerBlob = new Blob([`
     let tickInterval = null;
     self.onmessage = function(e) {
@@ -509,30 +477,30 @@ const metronome = new Worker(URL.createObjectURL(workerBlob));
 metronome.onmessage = function() {
     if (gameMode === 'menu' || checkMacroWinCondition()) return;
 
-    // A. Handle Network Disconnect Flow safely
     if (isDisconnected && gameMode !== 'local') {
         disconnectSeconds++;
         if (disconnectSeconds >= 3) {
             if (!document.getElementById('overlay-reconnect').classList.contains('visible')) {
                 hideOverlays(); document.getElementById('overlay-reconnect').classList.add('visible');
                 reconnectCountdown = 60;
+                logEvent('SYSTEM', 'Showing reconnect overlay UI');
             }
             reconnectCountdown--;
             document.getElementById('reconnect-time-display').innerText = reconnectCountdown;
             
             if (reconnectCountdown <= 0) {
                 clearDisconnectLogic();
+                logEvent('SYSTEM', 'Reconnect countdown hit zero. Forfeiting.');
                 endGame(mySymbol, null, "Opponent abandoned the match!");
             } else if (gameMode === 'join' && reconnectCountdown % 3 === 0) {
-                tryJoinReconnect(false); // Aggressive auto-reconnect
+                tryJoinReconnect(false); 
             }
         }
-        return; // Pause the game loop while disconnected
+        return; 
     } else {
         disconnectSeconds = 0;
     }
 
-    // B. Handle Idle Warning
     if (!isPaused) {
         const idleSeconds = Math.floor((Date.now() - lastActivityTime) / 1000);
         if (idleSeconds >= 60 && !isIdleWarningActive) {
@@ -546,12 +514,12 @@ metronome.onmessage = function() {
             document.getElementById('idle-countdown').innerText = idleCountdown;
             if (idleCountdown <= 0) {
                 if (gameMode !== 'local' && conn && conn.open) conn.send({ type: 'explicit_quit' });
+                logEvent('SYSTEM', 'Abandoned due to inactivity.');
                 endGame(mySymbol === 'X' ? 'O' : 'X', null, "Abandoned due to inactivity!");
                 return;
             }
         }
 
-        // C. Update Timers
         if (isBlitzMode) {
             timers[currentPlayer]--;
             if (timers[currentPlayer] <= 0) {
@@ -568,16 +536,20 @@ metronome.onmessage = function() {
         updateHUD(); saveState();
     }
 
-    // D. Heartbeat Logic (Every 2 seconds)
     if (gameMode !== 'local') {
         heartbeatCounter++;
         if (heartbeatCounter % 2 === 0) {
-            if (conn && conn.open) conn.send({ type: 'ping' });
+            if (conn && conn.open) {
+                conn.send({ type: 'ping' });
+                logEvent('NET', 'Sent Ping');
+            }
             const timeSinceLastPulse = Date.now() - lastHeartbeat;
             
             if (timeSinceLastPulse > 12000 && !isDisconnected) {
+                logEvent('NET', `Heartbeat timeout: ${timeSinceLastPulse}ms. Disconnecting.`);
                 isDisconnected = true; setStatus('disconnected');
             } else if (timeSinceLastPulse <= 12000 && isDisconnected) {
+                logEvent('NET', 'Heartbeat recovered. Reconnecting UI.');
                 isDisconnected = false; setStatus('connected');
                 document.getElementById('overlay-reconnect').classList.remove('visible');
             }
@@ -585,10 +557,9 @@ metronome.onmessage = function() {
     }
 };
 
-function startGameLoop() { metronome.postMessage('start'); }
-function stopGameLoop() { metronome.postMessage('stop'); }
+function startGameLoop() { logEvent('SYSTEM', 'Game loop started'); metronome.postMessage('start'); }
+function stopGameLoop() { logEvent('SYSTEM', 'Game loop stopped'); metronome.postMessage('stop'); }
 
-// --- Idle Tracking Listeners ---
 function resetActivity() {
     lastActivityTime = Date.now();
     if (isIdleWarningActive) {
@@ -600,18 +571,20 @@ document.addEventListener('touchstart', resetActivity, {passive: true});
 document.addEventListener('mousedown', resetActivity, {passive: true});
 document.addEventListener('keydown', resetActivity, {passive: true});
 
-// --- Tab Visibility Reconnect ---
 document.addEventListener('visibilitychange', () => {
+    logEvent('SYS', `Visibility changed: ${document.hidden ? 'hidden' : 'visible'}`);
     if (!document.hidden) {
         lastHeartbeat = Date.now();
         if (conn && conn.open) conn.send({ type: 'pong' }); 
-        if (peer && peer.disconnected) peer.reconnect(); // Aggressively fetch STUN/TURN if backgrounded too long
+        if (peer && peer.disconnected && !peer.destroyed) {
+            logEvent('PEER', 'Tab became visible. Peer was disconnected. Reconnecting...');
+            peer.reconnect();
+        }
     }
 });
 
-
 // ==========================================
-// 3. SAFETY ENGINES (Audio & Storage)
+// 3. AUDIO & STORAGE
 // ==========================================
 let audioCtx = null;
 function resumeAudio() {
@@ -681,7 +654,7 @@ function clearState() {
 }
 
 // ==========================================
-// 4. UI, DYNAMIC HUD & FULLSCREEN
+// 4. UI & FULLSCREEN
 // ==========================================
 function toggleFullscreen() {
     resumeAudio();
@@ -743,14 +716,12 @@ function updateHUD() {
 
     document.getElementById('player-wrap-bottom').classList.toggle('inactive-player', currentPlayer !== bottomPlayer);
     document.getElementById('player-wrap-bottom').classList.toggle('is-active', currentPlayer === bottomPlayer);
-    
     document.getElementById('player-wrap-top').classList.toggle('inactive-player', currentPlayer !== topPlayer);
     document.getElementById('player-wrap-top').classList.toggle('is-active', currentPlayer === topPlayer);
 
     const symBot = document.getElementById('symbol-bottom');
     symBot.innerHTML = `${bottomPlayer} <span class="hud-score">(<span id="score-bottom">${sessionScores[bottomPlayer]}</span>)</span>`;
     symBot.style.color = `var(--${bottomPlayer.toLowerCase()}-color)`;
-    
     document.getElementById('name-bottom').style.color = `var(--${bottomPlayer.toLowerCase()}-color)`;
     document.getElementById('text-name-bottom').innerText = names[bottomPlayer];
     document.getElementById('time-bottom').innerText = formatTime(timers[bottomPlayer]);
@@ -758,7 +729,6 @@ function updateHUD() {
     const symTop = document.getElementById('symbol-top');
     symTop.innerHTML = `${topPlayer} <span class="hud-score">(<span id="score-top">${sessionScores[topPlayer]}</span>)</span>`;
     symTop.style.color = `var(--${topPlayer.toLowerCase()}-color)`;
-    
     document.getElementById('name-top').style.color = `var(--${topPlayer.toLowerCase()}-color)`;
     document.getElementById('text-name-top').innerText = names[topPlayer];
     document.getElementById('time-top').innerText = formatTime(timers[topPlayer]);
@@ -801,10 +771,8 @@ function updateUI() {
         if (macroBoard[m] === 'X' || macroBoard[m] === 'O') {
             microEl.classList.add('won');
             if(!overlay.innerHTML) overlay.innerHTML = getSVG(macroBoard[m]);
-            
             if (isStrictRules && hasEmptyCells(m)) overlay.classList.add('strict-pass');
             else overlay.classList.remove('strict-pass');
-            
         } else if (macroBoard[m] === 'TIE') {
             microEl.classList.add('won');
             if(!overlay.innerHTML) overlay.innerHTML = `<span class="pop-anim" style="font-size:3rem; color:#94A3B8; font-weight:900;">—</span>`;
@@ -865,6 +833,7 @@ function handleCellClick(m, c) {
     if (board[m][c] !== null) return shakeError(m, c);
 
     let moveAuthor = currentPlayer; 
+    logEvent('GAME', `Move made by ${moveAuthor} at [${m},${c}]`);
     executeMove(m, c, moveAuthor);
     
     if (gameMode !== 'local' && conn && conn.open) {
@@ -944,6 +913,7 @@ function togglePause() {
 }
 
 function endGame(result, line = null, reason = null) {
+    logEvent('GAME', `Match ended. Result: ${result}. Reason: ${reason}`);
     stopGameLoop(); clearDisconnectLogic(); saveState();
     if (result !== 'TIE') { sfx.winMacro(); sessionScores[result]++; if(line) drawWinLine(line); }
     updateUI(); 
@@ -969,6 +939,7 @@ function resetGame(isRematch=false) {
     
     initBoardDOM(); updateUI(); hideMessage(); 
     resetActivity(); startGameLoop(); saveState();
+    logEvent('GAME', `Game Reset. Starting Player: ${startingPlayer}`);
 }
 
 // ==========================================
@@ -981,14 +952,44 @@ function clearDisconnectLogic() {
     disconnectSeconds = 0;
 }
 
+function bindPeerEvents(p) {
+    p.on('disconnected', () => {
+        logEvent('PEER', 'Disconnected from signaling server. P2P channel may still be alive. Attempting to restore signaling connection...');
+        if (!p.destroyed) {
+            p.reconnect();
+        }
+    });
+
+    p.on('error', (err) => {
+        logEvent('PEER_ERR', `Type: ${err.type}, Message: ${err.message}`);
+        if(err.type === 'unavailable-id') { 
+            p.destroy(); 
+            if(gameMode === 'host') {
+                setTimeout(() => tryHost(roomCode), 2000); 
+            }
+        } else {
+            showMessage('Network Error', err.message, 
+                `<button class="btn secondary" onclick="cancelSetup()">Back</button>
+                 <button class="btn secondary" style="margin-top: 5px; border-color: var(--o-color); color: var(--o-color);" onclick="copyErrorReport()">📋 Copy Report</button>`, false);
+        }
+    });
+}
+
 function bindDataListeners() {
-    conn.on('close', () => { if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); } });
-    conn.on('error', () => { if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); } });
+    conn.on('close', () => { 
+        logEvent('CONN', 'Data channel closed.');
+        if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); } 
+    });
+    
+    conn.on('error', (err) => { 
+        logEvent('CONN_ERR', `Error: ${err.message || err}`);
+        if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); } 
+    });
 
     conn.on('data', (data) => {
         switch(data.type) {
-            case 'ping': conn.send({ type: 'pong' }); break;
-            case 'pong': lastHeartbeat = Date.now(); break;
+            case 'ping': conn.send({ type: 'pong' }); logEvent('NET', 'Recv Ping, Sent Pong'); break;
+            case 'pong': lastHeartbeat = Date.now(); logEvent('NET', 'Recv Pong'); break;
             
             case 'init_game':
                 names.X = data.hostName || 'Player X'; names.O = data.joinName || 'Player O';
@@ -1001,6 +1002,7 @@ function bindDataListeners() {
                 hideOverlays(); resetGame(); break;
             case 'sync_state':
                 if (data.state) {
+                    logEvent('NET', 'State synchronized from host.');
                     loadState(data.state); 
                     saveState(); 
                     initBoardDOM(); updateUI(); startGameLoop();
@@ -1011,6 +1013,7 @@ function bindDataListeners() {
                 lastHeartbeat = Date.now();
                 break;
             case 'move': 
+                logEvent('NET', `Recv Move from ${data.p} to [${data.m},${data.c}]`);
                 executeMove(data.m, data.c, data.p, data.syncTime); 
                 break;
             case 'timeout_loss': endGame(mySymbol, null, "Opponent ran out of time!"); break;
@@ -1032,6 +1035,7 @@ function bindDataListeners() {
 }
 
 function setupConnection() {
+    logEvent('SYS', 'SetupConnection executed. Game ready.');
     setStatus('connected'); 
     hideMessage(); 
     document.getElementById('overlay-reconnect').classList.remove('visible');
@@ -1042,21 +1046,19 @@ function setupConnection() {
 
 function tryHost(existingCode = null) {
     roomCode = existingCode || Math.floor(1000 + Math.random() * 9000).toString();
+    logEvent('HOST', `Initializing room: ${roomCode}`);
     peer = new Peer(PEER_PREFIX + roomCode, peerConfig);
+    bindPeerEvents(peer);
+
     peer.on('open', () => { document.getElementById('display-room-code').innerText = roomCode; });
-    peer.on('error', (err) => {
-        if(err.type === 'unavailable-id') { 
-            peer.destroy(); 
-            if(existingCode) setTimeout(() => tryHost(existingCode), 2000); 
-            else tryHost(); 
-        } else showMessage('Error', err.message, `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false);
-    });
     
     peer.on('connection', (connection) => { 
+        logEvent('HOST', 'Inbound connection received.');
         conn = connection; 
         bindDataListeners(); 
         
         const onReady = () => {
+            logEvent('HOST', 'Data channel open and ready.');
             setupConnection(); 
             if(existingCode) { 
                 conn.send({ type: 'sync_state', state: localStorage.getItem('ult_ttt_state') });
@@ -1069,7 +1071,7 @@ function tryHost(existingCode = null) {
 }
 
 function initHost() {
-    resumeAudio(); clearState(); resetActivity();
+    resumeAudio(); clearState(); resetActivity(); debugLog.length = 0;
     let n = document.getElementById('input-player-name').value.trim();
     names.X = n ? n : 'Player X';
     names.O = 'Player O'; 
@@ -1079,11 +1081,9 @@ function initHost() {
 }
 
 function showJoinMenu() { resumeAudio(); hideOverlays(); document.getElementById('overlay-join').classList.add('visible'); }
-function showTutorial() { resumeAudio(); hideOverlays(); document.getElementById('overlay-tutorial').classList.add('visible'); }
-function closeTutorial() { resumeAudio(); hideOverlays(); document.getElementById('overlay-menu').classList.add('visible'); }
 
 function initJoin() {
-    resumeAudio(); clearState(); resetActivity();
+    resumeAudio(); clearState(); resetActivity(); debugLog.length = 0;
     const code = document.getElementById('input-room-code').value.trim();
     if (!/^\d{4}$/.test(code)) return document.getElementById('join-error').innerText = "Enter a 4-digit code.";
     let n = document.getElementById('input-player-name').value.trim();
@@ -1096,26 +1096,27 @@ function initJoin() {
 function tryJoinReconnect(isFirstTime = false) {
     if (isConnecting) return;
     isConnecting = true;
+    logEvent('JOIN', `Attempting to connect to ${roomCode}... First time: ${isFirstTime}`);
     try { if(peer) peer.destroy(); } catch(e){}
     
     setTimeout(() => {
         peer = new Peer(peerConfig);
+        bindPeerEvents(peer);
+
         peer.on('open', () => {
+            logEvent('JOIN', 'Connected to Peer signaling server. Dialing host...');
             conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
             bindDataListeners(); 
             
             conn.on('open', () => {
+                logEvent('JOIN', 'Data channel to host opened.');
                 isConnecting = false;
                 setupConnection();
                 if(isFirstTime) conn.send({ type: 'join_info', name: names.O });
                 else { conn.send({ type: 'reconnect_ping' }); lastHeartbeat = Date.now(); }
             });
-            conn.on('error', () => { isConnecting = false; });
-            conn.on('close', () => { isConnecting = false; });
-        });
-        peer.on('error', () => { 
-            isConnecting = false; 
-            if(isFirstTime) showMessage('Error', 'Room not found.', `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false);
+            conn.on('error', () => { logEvent('CONN', 'Join dial error.'); isConnecting = false; });
+            conn.on('close', () => { logEvent('CONN', 'Join dial closed.'); isConnecting = false; });
         });
     }, 100);
 }
