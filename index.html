@@ -205,6 +205,25 @@
         .huge-code { font-size: 4rem; font-weight: 900; letter-spacing: 10px; color: var(--x-color); margin: 10px 0; }
         .error-text { color: var(--o-color); font-size: 0.95rem; min-height: 20px; font-weight: 700; margin-top: -10px; }
 
+        /* --- Tutorial Graphics & Layout --- */
+        .tutorial-card { max-height: 85vh; overflow-y: auto; text-align: left; padding: 30px; }
+        .tutorial-card p { margin-bottom: 8px; color: #475569; font-size: 0.95rem; line-height: 1.5; font-weight: 600; }
+        .tutorial-grid { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 15px 0; }
+        
+        .tut-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--text-color); padding: 3px; border-radius: 4px; width: 64px; height: 64px; }
+        .tut-cell { background: #fff; border-radius: 1px; }
+        .tut-cell.highlight-x { background: var(--x-color); }
+        .tut-arrow { font-size: 1.8rem; color: #94A3B8; font-weight: 900; }
+        
+        .tut-macro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; background: var(--text-color); padding: 4px; border-radius: 6px; width: 85px; height: 85px; }
+        .tut-micro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--grid-dark); padding: 1px; border-radius: 2px; }
+        .tut-micro div { background: var(--bg-color); border-radius: 1px; }
+        .tut-micro.highlight-board { background: var(--o-color); box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.4); z-index: 2; position: relative;}
+        .tut-micro.highlight-board div { opacity: 0.7; }
+        
+        ul.tut-list { margin-left: 20px; font-size: 0.9rem; color: #475569; margin-bottom: 15px; font-weight: 600; line-height: 1.5; }
+        ul.tut-list li { margin-bottom: 8px; }
+
         /* Desktop Layout */
         @media (min-width: 768px) and (orientation: landscape) {
             body { flex-direction: row; }
@@ -285,6 +304,46 @@
             <button class="btn secondary" onclick="showJoinMenu()">Join via Code</button>
             <div style="border-top: 1px solid #E2E8F0; margin: 2px 0;"></div>
             <button class="btn secondary" style="background: transparent; border: 2px dashed #CBD5E1;" onclick="startLocalPlay()">Pass & Play (Local)</button>
+            <button class="btn secondary" style="font-size: 0.9rem; padding: 10px;" onclick="showTutorial()">📖 How to Play</button>
+        </div>
+    </div>
+
+    <!-- TUTORIAL OVERLAY -->
+    <div class="overlay" id="overlay-tutorial">
+        <div class="modal-card tutorial-card">
+            <h2 style="color: var(--text-color); text-align: center; margin-bottom: 15px; font-weight: 900;">How to Play</h2>
+            <p><strong>1. The Grid:</strong> The game is played on a giant 3x3 board, where each square contains a smaller 3x3 board.</p>
+            <p style="margin-top: 15px;"><strong>2. The Catch (The Core Rule):</strong> You do not get to pick which small board you play in. <strong>Your opponent's previous move dictates your current board.</strong></p>
+            
+            <div class="tutorial-grid">
+                <div class="tut-box">
+                    <div class="tut-cell"></div><div class="tut-cell"></div><div class="tut-cell highlight-x"></div>
+                    <div class="tut-cell"></div><div class="tut-cell"></div><div class="tut-cell"></div>
+                    <div class="tut-cell"></div><div class="tut-cell"></div><div class="tut-cell"></div>
+                </div>
+                <div class="tut-arrow">➜</div>
+                <div class="tut-macro">
+                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                    <div class="tut-micro highlight-board"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                    <div class="tut-micro"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                </div>
+            </div>
+            <p style="font-size: 0.85rem; text-align: center; margin-top:-5px; margin-bottom: 20px;"><em>Playing in the top-right square sends your opponent to the top-right board.</em></p>
+
+            <p><strong>3. Winning a Board:</strong> Get 3-in-a-row in a small board to win it. That board counts as a giant X or O for the main game.</p>
+            <p style="margin-top: 15px;"><strong>4. The Wildcard:</strong> What happens if you are sent to a board that is already won or completely full?</p>
+            <ul class="tut-list">
+                <li><strong>Standard:</strong> You get a free turn! You can play your next move <strong>anywhere</strong> on the giant board.</li>
+                <li><strong>Strict Rules:</strong> You <strong>MUST</strong> still play in that specific board if it has empty squares left, even if it is already won. You only get a free move if the board is completely full.</li>
+            </ul>
+            <p><strong>5. Winning the Game:</strong> Win 3 small boards in a row on the giant board to win it all!</p>
+            <button class="btn primary" style="margin-top: 10px;" onclick="closeTutorial()">Got it!</button>
         </div>
     </div>
 
@@ -352,7 +411,7 @@
 
 <script>
 // ==========================================
-// 0. DIAGNOSTIC LOGGING ENGINE (NEW)
+// 0. DIAGNOSTIC LOGGING ENGINE
 // ==========================================
 const debugLog = [];
 function logEvent(system, message) {
@@ -413,7 +472,7 @@ let sessionScores = { X: 0, O: 0 };
 let names = { X: 'Player X', O: 'Player O' };
 let roomCode = '';
 
-const BLITZ_START_SEC = 4 * 60; // UPDATED to 4 minutes
+const BLITZ_START_SEC = 4 * 60; // 4 minutes
 const BLITZ_INC_SEC = 5;        
 let timers = { X: 0, O: 0 };
 
@@ -1081,6 +1140,8 @@ function initHost() {
 }
 
 function showJoinMenu() { resumeAudio(); hideOverlays(); document.getElementById('overlay-join').classList.add('visible'); }
+function showTutorial() { resumeAudio(); hideOverlays(); document.getElementById('overlay-tutorial').classList.add('visible'); }
+function closeTutorial() { resumeAudio(); hideOverlays(); document.getElementById('overlay-menu').classList.add('visible'); }
 
 function initJoin() {
     resumeAudio(); clearState(); resetActivity(); debugLog.length = 0;
@@ -1154,11 +1215,13 @@ function requestRematch() {
 function acceptRematch() { resumeAudio(); conn.send({ type: 'accept_rematch' }); resetGame(true); }
 function declineRematch() { resumeAudio(); if (conn && conn.open) conn.send({ type: 'decline_rematch' }); explicitQuit(); }
 
+// UPDATED: Now completely ignores the input box when playing locally
 function startLocalPlay(isRematch=false) {
     resumeAudio(); clearState(); gameMode = 'local'; resetActivity();
-    let n = document.getElementById('input-player-name').value.trim();
-    names.X = n ? n + " (X)" : 'Player X'; names.O = n ? n + " (O)" : 'Player O';
-    isStrictRules = document.getElementById('toggle-strict').checked; isBlitzMode = document.getElementById('toggle-timer').checked;
+    names.X = 'Player X'; 
+    names.O = 'Player O';
+    isStrictRules = document.getElementById('toggle-strict').checked; 
+    isBlitzMode = document.getElementById('toggle-timer').checked;
     hideOverlays(); document.getElementById('connection-status').style.display = 'none'; resetGame(isRematch);
 }
 
