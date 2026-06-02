@@ -147,6 +147,12 @@
         .micro-board.won .macro-win-overlay { opacity: 1; pointer-events: auto; }
         .macro-win-overlay .symbol { width: 85%; height: 85%; stroke-width: 10; }
 
+        .macro-win-overlay.strict-pass {
+            pointer-events: none !important; 
+            background: transparent !important; 
+            opacity: 0.35 !important;
+        }
+
         @keyframes popIn { 0% { transform: scale(0); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
         @keyframes drawStrike { to { stroke-dashoffset: 0; } }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 60% { transform: translateX(6px); } }
@@ -155,6 +161,10 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .loader { border: 4px solid #E2E8F0; border-top: 4px solid var(--text-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 10px auto; }
+        
+        .ai-thinking { display: none; font-size: 0.8em; color: var(--o-color); animation: pulse-text 1s infinite; margin-top: 4px; }
+        .player-wrap.inactive-player .ai-thinking { display: none !important; }
+        .is-ai-turn .ai-thinking { display: block; }
 
         /* --- Overlays --- */
         .overlay {
@@ -190,6 +200,13 @@
         }
         input[type="text"]:focus { border-color: var(--x-color); background: #fff; }
         
+        select {
+            padding: 8px 12px; border: 2px solid #E2E8F0; border-radius: 8px;
+            font-family: inherit; font-weight: 700; color: #0F172A; background: #fff; 
+            outline: none; cursor: pointer; transition: all 0.2s;
+        }
+        select:focus { border-color: var(--x-color); }
+
         .btn {
             background: var(--text-color); color: #fff; border: none; padding: 15px; font-size: 1.1rem;
             border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s ease; width: 100%; font-family: inherit;
@@ -230,6 +247,9 @@
         .tut-micro.highlight-board { background: var(--o-color); box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.4); z-index: 2; position: relative;}
         .tut-micro.highlight-board div { opacity: 0.7; }
         
+        ul.tut-list { margin-left: 20px; font-size: 0.9rem; color: #475569; margin-bottom: 15px; font-weight: 600; line-height: 1.5; }
+        ul.tut-list li { margin-bottom: 8px; }
+
         /* Desktop Layout */
         @media (min-width: 768px) and (orientation: landscape) {
             body { flex-direction: row; }
@@ -250,6 +270,7 @@
             <div class="player-info" id="info-top">
                 <div class="player-name" id="name-top"><span id="text-name-top">Player O</span></div>
                 <div class="timer" id="time-top">00:00</div>
+                <div class="ai-thinking" id="ai-status">Thinking...</div>
             </div>
         </div>
         
@@ -293,18 +314,35 @@
             <h1 class="game-title">Ultimate TTT</h1>
             <input type="text" id="input-player-name" placeholder="Enter your name" maxlength="12">
             
-            <div style="margin: 5px 0 15px 0;">
-                <div class="setting-row" style="padding-bottom: 0;">
+            <div style="margin: 5px 0;">
+                <div class="setting-row">
                     <span>Blitz Timer (5m + 5s)</span>
                     <label class="switch"><input type="checkbox" id="toggle-timer"><span class="slider"></span></label>
                 </div>
+                <div class="setting-row" style="padding-bottom: 0;">
+                    <span>Strict Rules</span>
+                    <label class="switch"><input type="checkbox" id="toggle-strict"><span class="slider"></span></label>
+                </div>
+                <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 2px; margin-bottom: 10px; text-align: left;">Forces play in won boards if empty cells exist.</div>
             </div>
             
             <button class="btn primary" onclick="initHost()">Host Online Match</button>
             <button class="btn secondary" onclick="showJoinMenu()">Join via Code</button>
-            <div style="border-top: 1px solid #E2E8F0; margin: 2px 0;"></div>
-            <button class="btn secondary" style="background: transparent; border: 2px dashed #CBD5E1;" onclick="startLocalPlay()">Pass & Play (Local)</button>
-            <button class="btn secondary" style="font-size: 0.9rem; padding: 10px;" onclick="showTutorial()">📖 How to Play</button>
+            
+            <div style="border-top: 1px solid #E2E8F0; margin: 6px 0;"></div>
+            
+            <div class="setting-row">
+                <span>AI Difficulty</span>
+                <select id="ai-difficulty">
+                    <option value="1">Level 1 (Casual)</option>
+                    <option value="2" selected>Level 2 (Tactical)</option>
+                    <option value="3">Level 3 (Mastermind)</option>
+                </select>
+            </div>
+            <button class="btn secondary" style="background: #EFF6FF; border: 2px dashed #3B82F6; color: #1D4ED8;" onclick="startAIPlay()">🤖 Play vs AI</button>
+            
+            <button class="btn secondary" style="background: transparent; border: 2px dashed #CBD5E1; margin-top: 5px;" onclick="startLocalPlay()">Pass & Play (Local)</button>
+            <button class="btn secondary" style="font-size: 0.9rem; padding: 10px; margin-top: 5px;" onclick="showTutorial()">📖 How to Play</button>
         </div>
     </div>
 
@@ -312,7 +350,7 @@
         <div class="modal-card tutorial-card">
             <h2 style="color: var(--text-color); text-align: center; margin-bottom: 15px; font-weight: 900;">How to Play</h2>
             <p><strong>1. The Grid:</strong> The game is played on a giant 3x3 board, where each square contains a smaller 3x3 board.</p>
-            <p style="margin-top: 15px;"><strong>2. The Catch (The Core Rule):</strong> You do not get to pick which small board you play in. <strong>Your opponent's previous move dictates your current board.</strong></p>
+            <p style="margin-top: 15px;"><strong>2. The Catch:</strong> You do not get to pick which small board you play in. <strong>Your opponent's previous move dictates your current board.</strong></p>
             
             <div class="tutorial-grid">
                 <div class="tut-box">
@@ -335,9 +373,13 @@
             </div>
             <p style="font-size: 0.85rem; text-align: center; margin-top:-5px; margin-bottom: 20px;"><em>Playing in the top-right square sends your opponent to the top-right board.</em></p>
 
-            <p><strong>3. Winning a Board:</strong> Get 3-in-a-row in a small board to win it. That board counts as a giant X or O for the main game.</p>
-            <p style="margin-top: 15px;"><strong>4. The Wildcard:</strong> If you are sent to a board that is already won or completely full, you get a free turn! You can play your next move <strong>anywhere</strong> on the giant board.</p>
-            <p style="margin-top: 15px;"><strong>5. Winning the Game:</strong> Win 3 small boards in a row on the giant board to win it all!</p>
+            <p><strong>3. Winning a Board:</strong> Get 3-in-a-row in a small board to win it. That board counts as a giant X or O.</p>
+            <p style="margin-top: 15px;"><strong>4. The Wildcard:</strong> What if you are sent to a board that is already won/full?</p>
+            <ul class="tut-list">
+                <li><strong>Standard:</strong> You get a free turn! Play <strong>anywhere</strong>.</li>
+                <li><strong>Strict Rules:</strong> You <strong>MUST</strong> still play in that won board if empty squares remain.</li>
+            </ul>
+            <p><strong>5. Winning the Game:</strong> Win 3 small boards in a row on the giant board to win it all!</p>
             <button class="btn primary" style="margin-top: 10px;" onclick="closeTutorial()">Got it!</button>
         </div>
     </div>
@@ -400,8 +442,11 @@ let selectedMacro = -1;
 let currentPlayer = 'X';
 let startingPlayer = 'X'; 
 let mySymbol = 'X'; 
-let gameMode = 'menu'; 
+let gameMode = 'menu'; // 'menu', 'local', 'ai', 'host', 'join'
+let isStrictRules = false;
 let isBlitzMode = false;
+let aiDifficulty = 2; // 1: Casual, 2: Tactical, 3: Mastermind
+let isAiThinking = false;
 let isMuted = false;
 let isPaused = false;
 let sessionScores = { X: 0, O: 0 };
@@ -411,7 +456,6 @@ let roomCode = '';
 // Network Timers
 let isDisconnected = false;
 let isConnecting = false;
-let joinAttempts = 0;
 let joinRetryTimeout = null;
 let lastHeartbeat = Date.now();
 let heartbeatInterval = null;
@@ -428,19 +472,11 @@ let peer = null;
 let conn = null;
 
 const PEER_PREFIX = 'ult-ttt-prod-v5-';
-
-// ADDED: Relentless STUN fallback options and ping interval logic for maximum reliability 
 const peerConfig = {
-    pingInterval: 5000, 
     config: {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' },
-            { urls: 'stun:stun3.l.google.com:19302' },
-            { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
-            { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
-            { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" }
+            { urls: 'stun:stun1.l.google.com:19302' }
         ]
     }
 };
@@ -486,8 +522,8 @@ function saveState() {
     try {
         const state = {
             board, macroBoard, activeMacro, selectedMacro, currentPlayer, startingPlayer,
-            mySymbol, gameMode, isBlitzMode, sessionScores, names,
-            timers, roomCode, isPaused
+            mySymbol, gameMode, isStrictRules, isBlitzMode, sessionScores, names,
+            timers, roomCode, isPaused, aiDifficulty
         };
         localStorage.setItem('ult_ttt_state', JSON.stringify(state));
     } catch(e) {}
@@ -501,14 +537,15 @@ function loadState(stateString = null) {
         board = state.board; macroBoard = state.macroBoard;
         activeMacro = state.activeMacro; selectedMacro = state.selectedMacro;
         currentPlayer = state.currentPlayer; startingPlayer = state.startingPlayer;
-        isBlitzMode = state.isBlitzMode;
+        isStrictRules = state.isStrictRules; isBlitzMode = state.isBlitzMode;
         sessionScores = state.sessionScores; names = state.names;
         timers = state.timers; isPaused = state.isPaused;
         
         if (!stateString) {
             mySymbol = state.mySymbol; 
             gameMode = state.gameMode;
-            roomCode = state.roomCode;
+            roomCode = state.roomCode || '';
+            aiDifficulty = state.aiDifficulty || 2;
         }
         return true;
     } catch(e) { return false; }
@@ -516,18 +553,14 @@ function loadState(stateString = null) {
 
 function clearState() {
     try { localStorage.removeItem('ult_ttt_state'); } catch(e) {}
-    gameMode = 'menu'; roomCode = ''; selectedMacro = -1; activeMacro = -1;
+    gameMode = 'menu'; roomCode = ''; selectedMacro = -1; activeMacro = -1; isAiThinking = false;
 }
 
 document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
         lastHeartbeat = Date.now();
-        if (peer && peer.disconnected && !peer.destroyed) {
-            peer.reconnect();
-        }
-        if (conn && conn.open) {
-            conn.send({ type: 'pong' }); 
-        }
+        if (peer && peer.disconnected && !peer.destroyed) peer.reconnect();
+        if (conn && conn.open) conn.send({ type: 'pong' }); 
     }
 });
 
@@ -536,8 +569,7 @@ document.addEventListener('visibilitychange', () => {
 // ==========================================
 function toggleFullscreen() {
     resumeAudio();
-    const doc = window.document;
-    const docEl = doc.documentElement;
+    const doc = window.document; const docEl = doc.documentElement;
     const requestFullScreen = docEl.requestFullscreen || docEl.webkitRequestFullScreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
     const exitFullScreen = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
     if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement && !doc.msFullscreenElement) {
@@ -583,7 +615,7 @@ function updateHUD() {
     if (gameMode === 'menu') return;
     
     let bottomPlayer, topPlayer;
-    if (gameMode === 'local') {
+    if (gameMode === 'local' || gameMode === 'ai') {
         bottomPlayer = 'X'; 
         topPlayer = 'O';
     } else {
@@ -592,11 +624,14 @@ function updateHUD() {
         document.getElementById('connection-status').style.display = 'block';
     }
 
+    // Update active player styling
     document.getElementById('player-wrap-bottom').classList.toggle('inactive-player', currentPlayer !== bottomPlayer);
-    document.getElementById('player-wrap-bottom').classList.toggle('is-active', currentPlayer === bottomPlayer);
-    
     document.getElementById('player-wrap-top').classList.toggle('inactive-player', currentPlayer !== topPlayer);
-    document.getElementById('player-wrap-top').classList.toggle('is-active', currentPlayer === topPlayer);
+    
+    // Toggle AI thinking visual
+    if (gameMode === 'ai') {
+        document.getElementById('player-wrap-top').classList.toggle('is-ai-turn', isAiThinking && currentPlayer === 'O');
+    }
 
     const symBot = document.getElementById('symbol-bottom');
     symBot.innerHTML = `${bottomPlayer} <span class="hud-score">(<span id="score-bottom">${sessionScores[bottomPlayer]}</span>)</span>`;
@@ -614,7 +649,7 @@ function updateHUD() {
     document.getElementById('text-name-top').innerText = names[topPlayer];
     document.getElementById('time-top').innerText = formatTime(timers[topPlayer]);
 
-    if (gameMode !== 'local') {
+    if (gameMode !== 'local' && gameMode !== 'ai') {
         document.getElementById('name-bottom').style.fontSize = '1.6em';
         document.getElementById('symbol-bottom').style.fontSize = '3.5rem';
         document.getElementById('name-top').style.fontSize = '1.1em';
@@ -639,7 +674,7 @@ function updateUI() {
 
     for (let m = 0; m < 9; m++) {
         const microEl = document.getElementById(`macro-${m}`);
-        const isPlayable = macroBoard[m] === null;
+        const isPlayable = macroBoard[m] === null || (isStrictRules && hasEmptyCells(m));
         microEl.classList.remove('active', 'inactive', 'x-turn', 'o-turn');
         
         if ((activeMacro === -1 || activeMacro === m) && isPlayable && !isGameOver) {
@@ -652,7 +687,8 @@ function updateUI() {
         if (macroBoard[m] === 'X' || macroBoard[m] === 'O') {
             microEl.classList.add('won');
             if(!overlay.innerHTML) overlay.innerHTML = getSVG(macroBoard[m]);
-            
+            if (isStrictRules && hasEmptyCells(m)) overlay.classList.add('strict-pass');
+            else overlay.classList.remove('strict-pass');
         } else if (macroBoard[m] === 'TIE') {
             microEl.classList.add('won');
             if(!overlay.innerHTML) overlay.innerHTML = `<span class="pop-anim" style="font-size:3rem; color:#94A3B8; font-weight:900;">—</span>`;
@@ -665,16 +701,16 @@ function updateUI() {
     }
 
     const pauseBtn = document.getElementById('btn-pause');
-    if (gameMode === 'local' && isBlitzMode && !isGameOver) pauseBtn.style.display = 'flex';
+    if ((gameMode === 'local' || gameMode === 'ai') && isBlitzMode && !isGameOver) pauseBtn.style.display = 'flex';
     else pauseBtn.style.display = 'none';
 
     const isMyTurn = (gameMode === 'local' || currentPlayer === mySymbol);
-    if (selectedMacro !== -1 && !isGameOver && isMyTurn) applyZoom(selectedMacro);
+    if (selectedMacro !== -1 && !isGameOver && isMyTurn && !isAiThinking) applyZoom(selectedMacro);
     else wrapperEl.style.transform = `scale(1) translate3d(0,0,0)`;
 }
 
 document.getElementById('game-area').addEventListener('click', () => {
-    if (selectedMacro !== -1) { selectedMacro = -1; updateUI(); saveState(); }
+    if (selectedMacro !== -1 && !isAiThinking) { selectedMacro = -1; updateUI(); saveState(); }
 });
 
 function applyZoom(m) {
@@ -699,11 +735,12 @@ function hasEmptyCells(m) { return board[m].includes(null); }
 function handleCellClick(m, c) {
     resumeAudio();
     if (gameMode !== 'local' && currentPlayer !== mySymbol) return; 
-    if (checkMacroWinCondition() || isPaused || isDisconnected) return; 
+    if (checkMacroWinCondition() || isPaused || isDisconnected || isAiThinking) return; 
 
     if (selectedMacro === -1) {
         if (activeMacro !== -1 && activeMacro !== m) return shakeError(m, c);
-        if (macroBoard[m]) return shakeError(m, c); 
+        if (macroBoard[m] && !isStrictRules) return shakeError(m, c);
+        if (macroBoard[m] && isStrictRules && !hasEmptyCells(m)) return shakeError(m, c);
         selectedMacro = m; updateUI(); saveState(); return;
     }
 
@@ -713,8 +750,8 @@ function handleCellClick(m, c) {
     let moveAuthor = currentPlayer; 
     executeMove(m, c, moveAuthor);
     
-    if (gameMode !== 'local' && conn && conn.open) {
-        conn.send({ type: 'move', m: m, c: c, p: moveAuthor, syncTime: timers[moveAuthor] });
+    if (gameMode === 'host' || gameMode === 'join') {
+        if (conn && conn.open) conn.send({ type: 'move', m: m, c: c, p: moveAuthor, syncTime: timers[moveAuthor] });
     }
 }
 
@@ -731,15 +768,24 @@ function executeMove(m, c, p, syncTime = null) {
         else if (!hasEmptyCells(m)) macroBoard[m] = 'TIE';
     }
 
-    if (macroBoard[c] !== null) activeMacro = -1;
+    if (macroBoard[c] !== null && !isStrictRules) activeMacro = -1;
+    else if (macroBoard[c] !== null && isStrictRules && !hasEmptyCells(c)) activeMacro = -1; 
     else activeMacro = c;
 
-    if (activeMacro === -1) selectedMacro = -1; else selectedMacro = activeMacro;           
+    if (activeMacro === -1) selectedMacro = -1; else selectedMacro = activeMacro;            
     currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
     
     saveState(); updateUI();
     const macroResult = checkMacroWinCondition();
-    if (macroResult) endGame(macroResult.winner || 'TIE', macroResult.line);
+    
+    if (macroResult) {
+        endGame(macroResult.winner || 'TIE', macroResult.line);
+    } else {
+        // AI Trigger Loop
+        if (gameMode === 'ai' && currentPlayer === 'O') {
+            triggerAI();
+        }
+    }
 }
 
 function checkWin(arr) {
@@ -791,8 +837,8 @@ function startTimers() {
                 timers[currentPlayer] = 0; updateHUD();
                 const winner = currentPlayer === 'X' ? 'O' : 'X';
                 
-                if (gameMode === 'local' || currentPlayer === mySymbol) {
-                    if (gameMode !== 'local' && conn && conn.open) conn.send({ type: 'timeout_loss' });
+                if (gameMode === 'local' || gameMode === 'ai' || currentPlayer === mySymbol) {
+                    if ((gameMode === 'host' || gameMode === 'join') && conn && conn.open) conn.send({ type: 'timeout_loss' });
                     endGame(winner, null, 'Time out!');
                 }
             }
@@ -809,7 +855,7 @@ function togglePause() {
 }
 
 function endGame(result, line = null, reason = null) {
-    clearInterval(timerInterval); clearDisconnectLogic(); saveState();
+    clearInterval(timerInterval); clearDisconnectLogic(); saveState(); isAiThinking = false;
     if (result !== 'TIE') { sfx.winMacro(); sessionScores[result]++; if(line) drawWinLine(line); }
     updateUI(); 
     
@@ -817,8 +863,8 @@ function endGame(result, line = null, reason = null) {
         let desc = reason ? reason : (result === 'TIE' ? "It's a draw!" : `${names[result]} wins the game! 🎉`);
         let html = `<button class="btn primary" onclick="requestRematch()">Request Rematch</button>
                     <button class="btn secondary" onclick="explicitQuit()">Quit to Menu</button>`;
-        if (gameMode === 'local') {
-            html = `<button class="btn primary" onclick="startLocalPlay(true)">Play Again</button>
+        if (gameMode === 'local' || gameMode === 'ai') {
+            html = `<button class="btn primary" onclick="${gameMode === 'ai' ? 'startAIPlay(true)' : 'startLocalPlay(true)'}">Play Again</button>
                     <button class="btn secondary" onclick="explicitQuit()">Main Menu</button>`;
         }
         showMessage(result === 'TIE' ? 'Game Over' : 'Victory!', desc, html, false);
@@ -827,32 +873,197 @@ function endGame(result, line = null, reason = null) {
 
 function resetGame(isRematch=false) {
     board = Array(9).fill(null).map(() => Array(9).fill(null)); macroBoard = Array(9).fill(null);
-    activeMacro = -1; selectedMacro = -1; isPaused = false;
+    activeMacro = -1; selectedMacro = -1; isPaused = false; isAiThinking = false;
     startingPlayer = isRematch ? (startingPlayer === 'X' ? 'O' : 'X') : 'X';
     currentPlayer = startingPlayer;
     if (isBlitzMode) timers = { X: BLITZ_START_SEC, O: BLITZ_START_SEC }; else timers = { X: 0, O: 0 };
     initBoardDOM(); updateUI(); hideMessage(); startTimers(); saveState();
+    
+    if (gameMode === 'ai' && currentPlayer === 'O') triggerAI();
 }
 
+
 // ==========================================
-// 5. NETWORKING & HEARTBEAT ENGINE
+// 5. SMART AI ENGINE (Alpha-Beta Pruning)
+// ==========================================
+const AIEngine = {
+    startTime: 0,
+    maxTimeMs: 200,
+    
+    getValidMoves: function(b, mBoard, aMacro) {
+        let moves = [];
+        let macrosToCheck = aMacro === -1 ? [0,1,2,3,4,5,6,7,8].filter(i => !mBoard[i] || (isStrictRules && b[i].includes(null))) : [aMacro];
+        for (let m of macrosToCheck) {
+            for (let c = 0; c < 9; c++) if (b[m][c] === null) moves.push({m, c});
+        }
+        return moves;
+    },
+
+    simulateMove: function(b, mBoard, aMacro, m, c, player) {
+        let nextB = b.map(row => [...row]); // Deep copy
+        let nextM = [...mBoard];
+
+        nextB[m][c] = player;
+        if (!nextM[m]) {
+            let win = checkWin(nextB[m]);
+            if (win) nextM[m] = win.winner;
+            else if (!nextB[m].includes(null)) nextM[m] = 'TIE';
+        }
+
+        let nextActive = c;
+        if (nextM[c] !== null && !isStrictRules) nextActive = -1;
+        else if (nextM[c] !== null && isStrictRules && !nextB[c].includes(null)) nextActive = -1;
+
+        return { b: nextB, m: nextM, a: nextActive };
+    },
+
+    evaluateBoard: function(b, mBoard, aMacro, isMax) {
+        let score = 0;
+        
+        // 1. Macro-board value
+        score += this.evalLines(mBoard, 'O') * 150;
+        score -= this.evalLines(mBoard, 'X') * 150;
+        
+        // 2. Micro-board value
+        for (let i = 0; i < 9; i++) {
+            let boardWeight = (i === 4) ? 1.5 : (i % 2 === 0 ? 1.2 : 1.0); // Center > Corners > Edges
+            if (mBoard[i] === 'O') score += 50 * boardWeight;
+            else if (mBoard[i] === 'X') score -= 50 * boardWeight;
+            else {
+                score += this.evalLines(b[i], 'O') * boardWeight;
+                score -= this.evalLines(b[i], 'X') * boardWeight;
+            }
+        }
+        
+        // 3. Penalty for sending opponent to an unrestricted board
+        if (aMacro === -1) score += isMax ? -30 : 30; 
+        
+        return score;
+    },
+
+    evalLines: function(arr, p) {
+        let score = 0;
+        const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        for (let l of lines) {
+            let pCount = 0, emptyCount = 0;
+            for (let idx of l) {
+                if (arr[idx] === p) pCount++;
+                else if (arr[idx] === null) emptyCount++;
+            }
+            if (pCount === 3) score += 100;
+            else if (pCount === 2 && emptyCount === 1) score += 8;
+            else if (pCount === 1 && emptyCount === 2) score += 1;
+        }
+        return score;
+    },
+
+    minimax: function(b, mBoard, aMacro, depth, alpha, beta, isMax) {
+        let mWin = checkWin(mBoard);
+        if (mWin) return mWin.winner === 'O' ? 10000 + depth : -10000 - depth;
+        if (!mBoard.includes(null)) return 0;
+        
+        if (depth === 0 || (Date.now() - this.startTime) > this.maxTimeMs) {
+            return this.evaluateBoard(b, mBoard, aMacro, isMax);
+        }
+        
+        let validMoves = this.getValidMoves(b, mBoard, aMacro);
+        if (validMoves.length === 0) return 0;
+        
+        if (isMax) {
+            let maxEval = -Infinity;
+            for (let move of validMoves) {
+                let sim = this.simulateMove(b, mBoard, aMacro, move.m, move.c, 'O');
+                let ev = this.minimax(sim.b, sim.m, sim.a, depth - 1, alpha, beta, false);
+                maxEval = Math.max(maxEval, ev);
+                alpha = Math.max(alpha, ev);
+                if (beta <= alpha) break; // Prune
+            }
+            return maxEval;
+        } else {
+            let minEval = Infinity;
+            for (let move of validMoves) {
+                let sim = this.simulateMove(b, mBoard, aMacro, move.m, move.c, 'X');
+                let ev = this.minimax(sim.b, sim.m, sim.a, depth - 1, alpha, beta, true);
+                minEval = Math.min(minEval, ev);
+                beta = Math.min(beta, ev);
+                if (beta <= alpha) break; // Prune
+            }
+            return minEval;
+        }
+    },
+
+    getEasyMove: function(b, mBoard, aMacro, validMoves) {
+        // Casual mode: Take 1-move win, block 1-move loss, otherwise random.
+        for (let move of validMoves) {
+            let sim = this.simulateMove(b, mBoard, aMacro, move.m, move.c, 'O');
+            if (checkWin(sim.b[move.m])) return move;
+        }
+        for (let move of validMoves) {
+            let sim = this.simulateMove(b, mBoard, aMacro, move.m, move.c, 'X');
+            if (checkWin(sim.b[move.m])) return move;
+        }
+        return validMoves[Math.floor(Math.random() * validMoves.length)];
+    },
+
+    calculateMove: function(b, mBoard, aMacro, difficulty) {
+        this.startTime = Date.now();
+        let validMoves = this.getValidMoves(b, mBoard, aMacro);
+        if (validMoves.length === 0) return null;
+        if (validMoves.length === 1) return validMoves[0];
+
+        if (difficulty === 1) return this.getEasyMove(b, mBoard, aMacro, validMoves);
+
+        // Level 2: Depth 3 (200ms). Level 3: Depth 5 (600ms).
+        let depth = difficulty === 2 ? 3 : 5;
+        this.maxTimeMs = difficulty === 3 ? 600 : 200; 
+        
+        let bestScore = -Infinity;
+        let bestMoves = [];
+        
+        for (let move of validMoves) {
+            let sim = this.simulateMove(b, mBoard, aMacro, move.m, move.c, 'O');
+            let score = this.minimax(sim.b, sim.m, sim.a, depth - 1, -Infinity, Infinity, false);
+            
+            if (score > bestScore) { bestScore = score; bestMoves = [move]; } 
+            else if (score === bestScore) { bestMoves.push(move); }
+        }
+        
+        return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+    }
+};
+
+function triggerAI() {
+    isAiThinking = true;
+    updateHUD(); 
+    
+    // Yield to the browser main thread so the UI updates and doesn't freeze
+    setTimeout(() => {
+        let move = AIEngine.calculateMove(board, macroBoard, activeMacro, aiDifficulty);
+        isAiThinking = false;
+        
+        if (move) {
+            selectedMacro = move.m; updateUI();
+            // Slight visual delay so the move feels natural
+            setTimeout(() => { if (!isPaused) executeMove(move.m, move.c, 'O'); }, 300);
+        }
+    }, 50); 
+}
+
+
+// ==========================================
+// 6. NETWORKING & HEARTBEAT ENGINE
 // ==========================================
 function setStatus(status) { document.getElementById('connection-status').className = status; }
 
 function clearDisconnectLogic() {
-    clearInterval(heartbeatInterval);
-    clearTimeout(disconnectGraceTimeout);
-    clearInterval(disconnectCountdownInterval);
+    clearInterval(heartbeatInterval); clearTimeout(disconnectGraceTimeout); clearInterval(disconnectCountdownInterval);
     isDisconnected = false;
 }
 
 function startHeartbeat() {
-    clearDisconnectLogic();
-    lastHeartbeat = Date.now();
-    
+    clearDisconnectLogic(); lastHeartbeat = Date.now();
     heartbeatInterval = setInterval(() => {
-        if (gameMode === 'local' || gameMode === 'menu' || checkMacroWinCondition() !== null) return;
-        
+        if (gameMode === 'local' || gameMode === 'ai' || gameMode === 'menu' || checkMacroWinCondition() !== null) return;
         if (conn && conn.open) { conn.send({ type: 'ping' }); }
         const timeSinceLastPulse = Date.now() - lastHeartbeat;
         
@@ -875,16 +1086,11 @@ function handleDisconnect() {
         hideOverlays(); document.getElementById('overlay-reconnect').classList.add('visible');
         
         disconnectCountdownInterval = setInterval(() => {
-            timeLeft--;
-            document.getElementById('reconnect-time-display').innerText = timeLeft;
-            
+            timeLeft--; document.getElementById('reconnect-time-display').innerText = timeLeft;
             if(timeLeft <= 0) {
-                clearDisconnectLogic();
-                endGame(mySymbol, null, "Opponent abandoned the match!");
+                clearDisconnectLogic(); endGame(mySymbol, null, "Opponent abandoned the match!");
             } else {
-                if (gameMode === 'join' && timeLeft % 3 === 0) {
-                    tryJoinReconnect(false);
-                }
+                if (gameMode === 'join' && timeLeft % 3 === 0) tryJoinReconnect(false);
             }
         }, 1000);
     }, 2500);
@@ -898,53 +1104,38 @@ function bindDataListeners() {
         switch(data.type) {
             case 'ping': conn.send({ type: 'pong' }); break;
             case 'pong': lastHeartbeat = Date.now(); break;
-            
             case 'init_game':
                 names.X = data.hostName || 'Player X'; names.O = data.joinName || 'Player O';
-                isBlitzMode = data.blitz;
+                isStrictRules = data.strict; isBlitzMode = data.blitz;
                 hideOverlays(); resetGame(); break;
             case 'join_info':
                 names.O = data.name || 'Player O';
                 if (names.X.toLowerCase() === names.O.toLowerCase()) { names.X += ' (X)'; names.O += ' (O)'; }
-                conn.send({ type: 'init_game', hostName: names.X, joinName: names.O, blitz: isBlitzMode });
+                conn.send({ type: 'init_game', hostName: names.X, joinName: names.O, strict: isStrictRules, blitz: isBlitzMode });
                 hideOverlays(); resetGame(); break;
             case 'sync_state':
-                if (data.state) {
-                    loadState(data.state); 
-                    saveState(); 
-                    initBoardDOM(); updateUI(); startTimers();
-                }
-                break;
+                if (data.state) { loadState(data.state); saveState(); initBoardDOM(); updateUI(); startTimers(); } break;
             case 'reconnect_ping':
                 conn.send({ type: 'sync_state', state: localStorage.getItem('ult_ttt_state') });
-                lastHeartbeat = Date.now();
-                break;
+                lastHeartbeat = Date.now(); break;
             case 'move': 
-                executeMove(data.m, data.c, data.p, data.syncTime); 
-                break;
+                executeMove(data.m, data.c, data.p, data.syncTime); break;
             case 'timeout_loss': endGame(mySymbol, null, "Opponent ran out of time!"); break;
             case 'explicit_quit': 
-                clearDisconnectLogic();
-                showMessage('Match Ended', 'Opponent forfeited the match.', `<button class="btn primary" onclick="explicitQuit()">Main Menu</button>`, false);
-                break;
+                clearDisconnectLogic(); showMessage('Match Ended', 'Opponent forfeited the match.', `<button class="btn primary" onclick="explicitQuit()">Main Menu</button>`, false); break;
             case 'request_rematch':
                 showMessage('Rematch Request', `${mySymbol==='X'?names.O:names.X} wants a rematch!`, 
                     `<button class="btn primary" onclick="acceptRematch()">Let's Go!</button>
-                     <button class="btn secondary" onclick="declineRematch()">Decline</button>`, false);
-                break;
+                     <button class="btn secondary" onclick="declineRematch()">Decline</button>`, false); break;
             case 'accept_rematch': resetGame(true); break;
             case 'decline_rematch': 
-                showMessage('Declined', 'Opponent declined the rematch.', `<button class="btn primary" onclick="explicitQuit()">Main Menu</button>`, false);
-                break;
+                showMessage('Declined', 'Opponent declined the rematch.', `<button class="btn primary" onclick="explicitQuit()">Main Menu</button>`, false); break;
         }
     });
 }
 
 function setupConnection() {
-    setStatus('connected'); 
-    hideMessage(); 
-    document.getElementById('overlay-reconnect').classList.remove('visible');
-    startHeartbeat();
+    setStatus('connected'); hideMessage(); document.getElementById('overlay-reconnect').classList.remove('visible'); startHeartbeat();
 }
 
 function tryHost(existingCode = null) {
@@ -960,29 +1151,39 @@ function tryHost(existingCode = null) {
     });
     
     peer.on('connection', (connection) => { 
-        conn = connection; 
-        bindDataListeners(); 
-        
-        const onReady = () => {
-            setupConnection(); 
-            if(existingCode) { 
-                conn.send({ type: 'sync_state', state: localStorage.getItem('ult_ttt_state') });
-            }
-        };
-        
-        if (conn.open) onReady();
-        else conn.on('open', onReady);
+        conn = connection; bindDataListeners(); 
+        const onReady = () => { setupConnection(); if(existingCode) { conn.send({ type: 'sync_state', state: localStorage.getItem('ult_ttt_state') }); } };
+        if (conn.open) onReady(); else conn.on('open', onReady);
     });
 }
 
+// ==========================================
+// 7. SETUP & INITIALIZATION MENUS
+// ==========================================
 function initHost() {
     resumeAudio(); clearState();
     let n = document.getElementById('input-player-name').value.trim();
-    names.X = n ? n : 'Player X';
-    names.O = 'Player O'; 
-    isBlitzMode = document.getElementById('toggle-timer').checked;
+    names.X = n ? n : 'Player X'; names.O = 'Player O'; 
+    isStrictRules = document.getElementById('toggle-strict').checked; isBlitzMode = document.getElementById('toggle-timer').checked;
     gameMode = 'host'; mySymbol = 'X';
     hideOverlays(); document.getElementById('overlay-waiting').classList.add('visible'); tryHost();
+}
+
+function startLocalPlay(isRematch=false) {
+    resumeAudio(); clearState(); gameMode = 'local';
+    let n = document.getElementById('input-player-name').value.trim();
+    names.X = n ? n + " (X)" : 'Player X'; names.O = n ? n + " (O)" : 'Player O';
+    isStrictRules = document.getElementById('toggle-strict').checked; isBlitzMode = document.getElementById('toggle-timer').checked;
+    hideOverlays(); document.getElementById('connection-status').style.display = 'none'; resetGame(isRematch);
+}
+
+function startAIPlay(isRematch=false) {
+    resumeAudio(); clearState(); gameMode = 'ai'; mySymbol = 'X'; 
+    let n = document.getElementById('input-player-name').value.trim();
+    names.X = n ? n : 'You'; names.O = 'AI Bot';
+    isStrictRules = document.getElementById('toggle-strict').checked; isBlitzMode = document.getElementById('toggle-timer').checked;
+    aiDifficulty = parseInt(document.getElementById('ai-difficulty').value);
+    hideOverlays(); document.getElementById('connection-status').style.display = 'none'; resetGame(isRematch);
 }
 
 function showJoinMenu() { resumeAudio(); hideOverlays(); document.getElementById('overlay-join').classList.add('visible'); }
@@ -996,7 +1197,6 @@ function initJoin() {
     let n = document.getElementById('input-player-name').value.trim();
     names.O = n ? n : 'Player O';
     gameMode = 'join'; mySymbol = 'O'; roomCode = code;
-    joinAttempts = 0;
     hideOverlays(); showMessage('Connecting...', 'Finding host...', '', false);
     tryJoinReconnect(true); 
 }
@@ -1004,22 +1204,15 @@ function initJoin() {
 function tryJoinReconnect(isFirstTime = false) {
     if (isConnecting) return;
     isConnecting = true;
-    joinAttempts++;
     try { if(peer) peer.destroy(); } catch(e){}
-    
-    if (isFirstTime && joinAttempts > 1) {
-        document.getElementById('msg-desc').innerText = `Attempting to reach host... (Try ${joinAttempts})`;
-    }
     
     setTimeout(() => {
         peer = new Peer(peerConfig);
         peer.on('open', () => {
             conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
             bindDataListeners(); 
-            
             conn.on('open', () => {
-                isConnecting = false;
-                setupConnection();
+                isConnecting = false; setupConnection();
                 if(isFirstTime) conn.send({ type: 'join_info', name: names.O });
                 else { conn.send({ type: 'reconnect_ping' }); lastHeartbeat = Date.now(); }
             });
@@ -1030,31 +1223,23 @@ function tryJoinReconnect(isFirstTime = false) {
         peer.on('error', (err) => { 
             isConnecting = false; 
             if(isFirstTime) {
-                // ADDED: Relentless Dialing Protocol. Keep trying instead of failing natively.
-                if (err.type === 'peer-unavailable' || err.type === 'network' || err.type === 'server-error') {
-                    if (joinAttempts === 1) document.getElementById('msg-desc').innerText = "Waiting for host to wake up...";
-                    joinRetryTimeout = setTimeout(() => {
-                        if (gameMode === 'join') tryJoinReconnect(true);
-                    }, 3500);
-                } else {
-                    showMessage('Error', err.message, `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false);
-                }
+                if (err.type === 'peer-unavailable') {
+                    document.getElementById('msg-desc').innerText = "Waiting for host to open the app...";
+                    joinRetryTimeout = setTimeout(() => { if (gameMode === 'join') tryJoinReconnect(true); }, 3000);
+                } else { showMessage('Error', err.message, `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false); }
             }
         });
     }, 100);
 }
 
 function requestQuit() {
-    resumeAudio();
-    showMessage('Quit Match?', 'Are you sure you want to forfeit?', 
+    resumeAudio(); showMessage('Quit Match?', 'Are you sure you want to forfeit?', 
         `<button class="btn danger" onclick="explicitQuit(true)">Yes, Quit</button>
          <button class="btn secondary" onclick="hideMessage()">Cancel</button>`, false);
 }
 
 function cancelSetup() {
-    resumeAudio();
-    isConnecting = false;
-    clearTimeout(joinRetryTimeout); 
+    resumeAudio(); isConnecting = false; clearTimeout(joinRetryTimeout);
     try { if (conn) { conn.close(); conn = null; } if (peer) { peer.destroy(); peer = null; } } catch(e) {}
     clearDisconnectLogic(); clearState();
     document.getElementById('input-room-code').value = ''; document.getElementById('join-error').innerText = '';
@@ -1071,19 +1256,12 @@ function explicitQuit(sendPayload = false) {
 function requestRematch() {
     resumeAudio();
     if (gameMode === 'local') return startLocalPlay(true);
+    if (gameMode === 'ai') return startAIPlay(true);
     showMessage('Waiting...', 'Asking opponent for a rematch...', '', false);
     conn.send({ type: 'request_rematch' });
 }
 function acceptRematch() { resumeAudio(); conn.send({ type: 'accept_rematch' }); resetGame(true); }
 function declineRematch() { resumeAudio(); if (conn && conn.open) conn.send({ type: 'decline_rematch' }); explicitQuit(); }
-
-function startLocalPlay(isRematch=false) {
-    resumeAudio(); clearState(); gameMode = 'local';
-    let n = document.getElementById('input-player-name').value.trim();
-    names.X = n ? n + " (X)" : 'Player X'; names.O = n ? n + " (O)" : 'Player O';
-    isBlitzMode = document.getElementById('toggle-timer').checked;
-    hideOverlays(); document.getElementById('connection-status').style.display = 'none'; resetGame(isRematch);
-}
 
 function hideOverlays() { document.querySelectorAll('.overlay').forEach(el => el.classList.remove('visible')); }
 function showMessage(title, desc, customHtml, autoHide=true) {
@@ -1095,16 +1273,19 @@ function showMessage(title, desc, customHtml, autoHide=true) {
 function hideMessage() { document.getElementById('overlay-message').classList.remove('visible'); }
 
 // ==========================================
-// 7. BOOTSTRAP
+// 8. BOOTSTRAP
 // ==========================================
 window.onload = () => {
     initBoardDOM();
     if (loadState()) {
         updateUI();
-        if (gameMode === 'local') {
+        if (gameMode === 'local' || gameMode === 'ai') {
             hideOverlays();
             if (checkMacroWinCondition()) endGame(checkMacroWinCondition().winner, checkMacroWinCondition().line, "Resumed", true);
-            else startTimers();
+            else {
+                startTimers();
+                if (gameMode === 'ai' && currentPlayer === 'O') triggerAI();
+            }
         } else if (gameMode === 'host' || gameMode === 'join') {
             hideOverlays();
             if (checkMacroWinCondition()) endGame(checkMacroWinCondition().winner, checkMacroWinCondition().line, "Resumed", true);
