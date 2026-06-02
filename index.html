@@ -46,6 +46,7 @@
         .hud-symbol { font-weight: 900; transition: color 0.3s ease; display: flex; align-items: baseline; gap: 5px;}
         .hud-score { font-size: 0.45em; color: #94A3B8; font-weight: 800; transform: translateY(-4px);}
 
+        /* Inactive Player Dimming */
         .player-wrap { display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; }
         .inactive-player { opacity: 0.35; filter: grayscale(80%); }
 
@@ -65,7 +66,7 @@
         .btn-icon.active { background: var(--text-color); color: #fff; }
         .btn-icon.danger:hover { background: #FEE2E2; color: var(--o-color); }
 
-        /* --- Game Board --- */
+        /* --- Game Board (Anti-Stretch & Anti-Crop Architecture) --- */
         #game-area {
             flex: 1 1 0; 
             min-height: 0; min-width: 0;
@@ -78,13 +79,16 @@
             width: min(100cqw, 100cqh, 650px);
             height: min(100cqw, 100cqh, 650px);
             aspect-ratio: 1 / 1;
+            
             position: relative;
             transform-origin: center center; 
             transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+            
             will-change: transform;
             -webkit-transform: translate3d(0,0,0);
             transform: translate3d(0,0,0);
             backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         .macro-board {
@@ -115,6 +119,7 @@
         }
         @media (hover: hover) { .micro-board.active .cell:empty:hover { background-color: #E2E8F0; } }
 
+        /* --- SVG Drawing & Marker Win Line --- */
         .symbol { width: 75%; height: 75%; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; fill: none; }
         .symbol.x { stroke: var(--x-color); }
         .symbol.o { stroke: var(--o-color); }
@@ -124,9 +129,13 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 10; pointer-events: none; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
         }
+        
         .strike-line {
-            stroke: var(--text-color); stroke-width: 4; stroke-linecap: round;
-            stroke-dasharray: 150; stroke-dashoffset: 150;
+            stroke: var(--text-color); 
+            stroke-width: 4; 
+            stroke-linecap: round;
+            stroke-dasharray: 150; 
+            stroke-dashoffset: 150;
         }
 
         .macro-win-overlay {
@@ -137,7 +146,6 @@
         }
         .micro-board.won .macro-win-overlay { opacity: 1; pointer-events: auto; }
         .macro-win-overlay .symbol { width: 85%; height: 85%; stroke-width: 10; }
-        .macro-win-overlay.strict-pass { pointer-events: none !important; background: transparent !important; opacity: 0.35 !important; }
 
         @keyframes popIn { 0% { transform: scale(0); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
         @keyframes drawStrike { to { stroke-dashoffset: 0; } }
@@ -145,6 +153,7 @@
         .shake { animation: shake 0.25s both; }
         @keyframes pulse-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         .loader { border: 4px solid #E2E8F0; border-top: 4px solid var(--text-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 10px auto; }
 
         /* --- Overlays --- */
@@ -221,9 +230,6 @@
         .tut-micro.highlight-board { background: var(--o-color); box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.4); z-index: 2; position: relative;}
         .tut-micro.highlight-board div { opacity: 0.7; }
         
-        ul.tut-list { margin-left: 20px; font-size: 0.9rem; color: #475569; margin-bottom: 15px; font-weight: 600; line-height: 1.5; }
-        ul.tut-list li { margin-bottom: 8px; }
-
         /* Desktop Layout */
         @media (min-width: 768px) and (orientation: landscape) {
             body { flex-direction: row; }
@@ -281,23 +287,17 @@
         </div>
     </div>
 
-    <!-- MAIN MENU OVERLAY -->
     <div class="overlay visible" id="overlay-menu">
         <div class="menu-bg"></div>
         <div class="modal-card">
             <h1 class="game-title">Ultimate TTT</h1>
             <input type="text" id="input-player-name" placeholder="Enter your name" maxlength="12">
             
-            <div style="margin: 5px 0;">
-                <div class="setting-row">
-                    <span>Blitz Timer (4m + 5s)</span>
+            <div style="margin: 5px 0 15px 0;">
+                <div class="setting-row" style="padding-bottom: 0;">
+                    <span>Blitz Timer (5m + 5s)</span>
                     <label class="switch"><input type="checkbox" id="toggle-timer"><span class="slider"></span></label>
                 </div>
-                <div class="setting-row" style="padding-bottom: 0;">
-                    <span>Strict Rules</span>
-                    <label class="switch"><input type="checkbox" id="toggle-strict"><span class="slider"></span></label>
-                </div>
-                <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 2px; margin-bottom: 10px; text-align: left;">Forces play in won boards if empty cells exist.</div>
             </div>
             
             <button class="btn primary" onclick="initHost()">Host Online Match</button>
@@ -308,7 +308,6 @@
         </div>
     </div>
 
-    <!-- TUTORIAL OVERLAY -->
     <div class="overlay" id="overlay-tutorial">
         <div class="modal-card tutorial-card">
             <h2 style="color: var(--text-color); text-align: center; margin-bottom: 15px; font-weight: 900;">How to Play</h2>
@@ -337,17 +336,12 @@
             <p style="font-size: 0.85rem; text-align: center; margin-top:-5px; margin-bottom: 20px;"><em>Playing in the top-right square sends your opponent to the top-right board.</em></p>
 
             <p><strong>3. Winning a Board:</strong> Get 3-in-a-row in a small board to win it. That board counts as a giant X or O for the main game.</p>
-            <p style="margin-top: 15px;"><strong>4. The Wildcard:</strong> What happens if you are sent to a board that is already won or completely full?</p>
-            <ul class="tut-list">
-                <li><strong>Standard:</strong> You get a free turn! You can play your next move <strong>anywhere</strong> on the giant board.</li>
-                <li><strong>Strict Rules:</strong> You <strong>MUST</strong> still play in that specific board if it has empty squares left, even if it is already won. You only get a free move if the board is completely full.</li>
-            </ul>
-            <p><strong>5. Winning the Game:</strong> Win 3 small boards in a row on the giant board to win it all!</p>
+            <p style="margin-top: 15px;"><strong>4. The Wildcard:</strong> If you are sent to a board that is already won or completely full, you get a free turn! You can play your next move <strong>anywhere</strong> on the giant board.</p>
+            <p style="margin-top: 15px;"><strong>5. Winning the Game:</strong> Win 3 small boards in a row on the giant board to win it all!</p>
             <button class="btn primary" style="margin-top: 10px;" onclick="closeTutorial()">Got it!</button>
         </div>
     </div>
 
-    <!-- JOIN OVERLAY -->
     <div class="overlay" id="overlay-join">
         <div class="modal-card">
             <h2>Join Match</h2>
@@ -359,7 +353,6 @@
         </div>
     </div>
 
-    <!-- WAITING OVERLAY -->
     <div class="overlay" id="overlay-waiting">
         <div class="modal-card" style="align-items: center;">
             <h2>Room Code</h2>
@@ -370,28 +363,15 @@
         </div>
     </div>
 
-    <!-- IDLE WARNING OVERLAY -->
-    <div class="overlay" id="overlay-idle" style="backdrop-filter: var(--blur-heavy); -webkit-backdrop-filter: var(--blur-heavy); z-index: 2000;">
-        <div class="modal-card" style="align-items: center; border-color: var(--o-color);">
-            <h2 style="font-size: 2.2rem; color: var(--o-color); text-align: center;">Are you there?</h2>
-            <p style="color:#64748B; margin-bottom: 5px; font-weight: 700; text-align: center;">Game will auto-forfeit in...</p>
-            <div style="font-size: 3.5rem; font-weight: 900; color: var(--o-color); margin: 10px 0;" id="idle-countdown">60</div>
-            <button class="btn primary" onclick="resetActivity()">I'm still playing!</button>
-        </div>
-    </div>
-
-    <!-- RECONNECT OVERLAY -->
     <div class="overlay" id="overlay-reconnect" style="backdrop-filter: var(--blur-heavy); -webkit-backdrop-filter: var(--blur-heavy);">
         <div class="modal-card" style="align-items: center; border-color: var(--o-color);">
             <h2 style="font-size: 2rem; color: var(--text-color); text-align: center;">Connection Lost</h2>
             <p style="color:#64748B; margin-bottom: 5px; font-weight: 700; text-align: center;">Waiting for opponent to reconnect...</p>
             <div style="font-size: 3.5rem; font-weight: 900; color: var(--o-color); margin: 10px 0;" id="reconnect-time-display">60</div>
             <button class="btn danger" onclick="explicitQuit(true)">Forfeit & Quit</button>
-            <button class="btn secondary" style="margin-top: 10px; border-color: var(--o-color); color: var(--o-color); font-size: 0.9rem;" onclick="copyErrorReport()">📋 Copy Error Report</button>
         </div>
     </div>
 
-    <!-- PAUSE OVERLAY -->
     <div class="overlay" id="overlay-pause" style="backdrop-filter: var(--blur-heavy); -webkit-backdrop-filter: var(--blur-heavy);">
         <div class="modal-card" style="align-items: center; border-color: var(--x-color);">
             <h2 style="font-size: 2.5rem; color: var(--text-color);">PAUSED</h2>
@@ -400,7 +380,6 @@
         </div>
     </div>
 
-    <!-- MESSAGE OVERLAY -->
     <div class="overlay" id="overlay-message">
         <div class="modal-card" style="align-items: center;">
             <h2 id="msg-title" style="font-size: 2.2rem; margin-bottom: 0;">Title</h2>
@@ -410,48 +389,6 @@
     </div>
 
 <script>
-// ==========================================
-// 0. DIAGNOSTIC LOGGING ENGINE
-// ==========================================
-const debugLog = [];
-function logEvent(system, message) {
-    const time = new Date().toISOString().split('T')[1].split('.')[0];
-    const entry = `[${time}] [${system}] ${message}`;
-    debugLog.push(entry);
-    if (debugLog.length > 50) debugLog.shift(); 
-    console.log(entry);
-}
-
-function generateErrorReport() {
-    const report = {
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
-        gameState: {
-            mode: gameMode, roomCode: roomCode, currentPlayer: currentPlayer, 
-            mySymbol: mySymbol, paused: isPaused, activeMacro: activeMacro,
-            timers: timers, rules: isStrictRules ? 'Strict' : 'Standard'
-        },
-        networkState: {
-            peerID: peer ? peer.id : null,
-            peerDestroyed: peer ? peer.destroyed : null,
-            peerDisconnected: peer ? peer.disconnected : null,
-            connOpen: conn ? conn.open : null,
-            timeSinceHeartbeatMs: Date.now() - lastHeartbeat
-        },
-        events: debugLog
-    };
-    return JSON.stringify(report, null, 2);
-}
-
-function copyErrorReport() {
-    const reportStr = generateErrorReport();
-    navigator.clipboard.writeText(reportStr).then(() => {
-        alert("Error report copied to clipboard! Please send this to the developer.");
-    }).catch(err => {
-        prompt("Could not auto-copy. Please manually copy the text below:", reportStr);
-    });
-}
-
 // ==========================================
 // 1. STATE & CORE VARIABLES
 // ==========================================
@@ -464,7 +401,6 @@ let currentPlayer = 'X';
 let startingPlayer = 'X'; 
 let mySymbol = 'X'; 
 let gameMode = 'menu'; 
-let isStrictRules = false;
 let isBlitzMode = false;
 let isMuted = false;
 let isPaused = false;
@@ -472,44 +408,40 @@ let sessionScores = { X: 0, O: 0 };
 let names = { X: 'Player X', O: 'Player O' };
 let roomCode = '';
 
-const BLITZ_START_SEC = 4 * 60; // 4 minutes
-const BLITZ_INC_SEC = 5;        
-let timers = { X: 0, O: 0 };
-
-// Network & Loop State
-let peer = null;
-let conn = null;
+// Network Timers
 let isDisconnected = false;
 let isConnecting = false;
+let joinAttempts = 0;
+let joinRetryTimeout = null;
 let lastHeartbeat = Date.now();
-let heartbeatCounter = 0;
-let disconnectSeconds = 0;
-let reconnectCountdown = 60;
+let heartbeatInterval = null;
+let disconnectGraceTimeout = null;
+let disconnectCountdownInterval = null;
 
-// Idle State
-let lastActivityTime = Date.now();
-let isIdleWarningActive = false;
-let idleCountdown = 60;
+const BLITZ_START_SEC = 5 * 60; 
+const BLITZ_INC_SEC = 5;        
+
+let timers = { X: 0, O: 0 };
+let timerInterval = null;
+
+let peer = null;
+let conn = null;
 
 const PEER_PREFIX = 'ult-ttt-prod-v5-';
 
+// ADDED: Relentless STUN fallback options and ping interval logic for maximum reliability 
 const peerConfig = {
+    pingInterval: 5000, 
     config: {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-            {
-                urls: "turn:openrelay.metered.ca:80",
-                username: "openrelayproject",
-                credential: "openrelayproject"
-            },
-            {
-                urls: "turn:openrelay.metered.ca:443",
-                username: "openrelayproject",
-                credential: "openrelayproject"
-            }
-        ],
-        iceTransportPolicy: 'all'
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+            { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+            { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" }
+        ]
     }
 };
 
@@ -518,132 +450,7 @@ const wrapperEl = document.getElementById('board-wrapper');
 const winLineSVG = document.getElementById('win-line');
 
 // ==========================================
-// 2. BACKGROUND-PROOF METRONOME (WEB WORKER)
-// ==========================================
-const workerBlob = new Blob([`
-    let tickInterval = null;
-    self.onmessage = function(e) {
-        if (e.data === 'start') {
-            if (tickInterval) clearInterval(tickInterval);
-            tickInterval = setInterval(() => self.postMessage('tick'), 1000);
-        } else if (e.data === 'stop') {
-            clearInterval(tickInterval);
-        }
-    };
-`], {type: 'application/javascript'});
-const metronome = new Worker(URL.createObjectURL(workerBlob));
-
-metronome.onmessage = function() {
-    if (gameMode === 'menu' || checkMacroWinCondition()) return;
-
-    if (isDisconnected && gameMode !== 'local') {
-        disconnectSeconds++;
-        if (disconnectSeconds >= 3) {
-            if (!document.getElementById('overlay-reconnect').classList.contains('visible')) {
-                hideOverlays(); document.getElementById('overlay-reconnect').classList.add('visible');
-                reconnectCountdown = 60;
-                logEvent('SYSTEM', 'Showing reconnect overlay UI');
-            }
-            reconnectCountdown--;
-            document.getElementById('reconnect-time-display').innerText = reconnectCountdown;
-            
-            if (reconnectCountdown <= 0) {
-                clearDisconnectLogic();
-                logEvent('SYSTEM', 'Reconnect countdown hit zero. Forfeiting.');
-                endGame(mySymbol, null, "Opponent abandoned the match!");
-            } else if (gameMode === 'join' && reconnectCountdown % 3 === 0) {
-                tryJoinReconnect(false); 
-            }
-        }
-        return; 
-    } else {
-        disconnectSeconds = 0;
-    }
-
-    if (!isPaused) {
-        const idleSeconds = Math.floor((Date.now() - lastActivityTime) / 1000);
-        if (idleSeconds >= 60 && !isIdleWarningActive) {
-            isIdleWarningActive = true;
-            idleCountdown = 60;
-            document.getElementById('overlay-idle').classList.add('visible');
-        }
-
-        if (isIdleWarningActive) {
-            idleCountdown--;
-            document.getElementById('idle-countdown').innerText = idleCountdown;
-            if (idleCountdown <= 0) {
-                if (gameMode !== 'local' && conn && conn.open) conn.send({ type: 'explicit_quit' });
-                logEvent('SYSTEM', 'Abandoned due to inactivity.');
-                endGame(mySymbol === 'X' ? 'O' : 'X', null, "Abandoned due to inactivity!");
-                return;
-            }
-        }
-
-        if (isBlitzMode) {
-            timers[currentPlayer]--;
-            if (timers[currentPlayer] <= 0) {
-                timers[currentPlayer] = 0; updateHUD();
-                const winner = currentPlayer === 'X' ? 'O' : 'X';
-                if (gameMode === 'local' || currentPlayer === mySymbol) {
-                    if (gameMode !== 'local' && conn && conn.open) conn.send({ type: 'timeout_loss' });
-                    endGame(winner, null, 'Time out!');
-                }
-            }
-        } else {
-            timers[currentPlayer]++;
-        }
-        updateHUD(); saveState();
-    }
-
-    if (gameMode !== 'local') {
-        heartbeatCounter++;
-        if (heartbeatCounter % 2 === 0) {
-            if (conn && conn.open) {
-                conn.send({ type: 'ping' });
-                logEvent('NET', 'Sent Ping');
-            }
-            const timeSinceLastPulse = Date.now() - lastHeartbeat;
-            
-            if (timeSinceLastPulse > 12000 && !isDisconnected) {
-                logEvent('NET', `Heartbeat timeout: ${timeSinceLastPulse}ms. Disconnecting.`);
-                isDisconnected = true; setStatus('disconnected');
-            } else if (timeSinceLastPulse <= 12000 && isDisconnected) {
-                logEvent('NET', 'Heartbeat recovered. Reconnecting UI.');
-                isDisconnected = false; setStatus('connected');
-                document.getElementById('overlay-reconnect').classList.remove('visible');
-            }
-        }
-    }
-};
-
-function startGameLoop() { logEvent('SYSTEM', 'Game loop started'); metronome.postMessage('start'); }
-function stopGameLoop() { logEvent('SYSTEM', 'Game loop stopped'); metronome.postMessage('stop'); }
-
-function resetActivity() {
-    lastActivityTime = Date.now();
-    if (isIdleWarningActive) {
-        isIdleWarningActive = false;
-        document.getElementById('overlay-idle').classList.remove('visible');
-    }
-}
-document.addEventListener('touchstart', resetActivity, {passive: true});
-document.addEventListener('mousedown', resetActivity, {passive: true});
-document.addEventListener('keydown', resetActivity, {passive: true});
-
-document.addEventListener('visibilitychange', () => {
-    logEvent('SYS', `Visibility changed: ${document.hidden ? 'hidden' : 'visible'}`);
-    if (!document.hidden) {
-        lastHeartbeat = Date.now();
-        if (conn && conn.open) conn.send({ type: 'pong' }); 
-        if (peer && peer.disconnected && !peer.destroyed) {
-            logEvent('PEER', 'Tab became visible. Peer was disconnected. Reconnecting...');
-            peer.reconnect();
-        }
-    }
-});
-
-// ==========================================
-// 3. AUDIO & STORAGE
+// 2. SAFETY ENGINES (Audio & Storage)
 // ==========================================
 let audioCtx = null;
 function resumeAudio() {
@@ -679,7 +486,7 @@ function saveState() {
     try {
         const state = {
             board, macroBoard, activeMacro, selectedMacro, currentPlayer, startingPlayer,
-            mySymbol, gameMode, isStrictRules, isBlitzMode, sessionScores, names,
+            mySymbol, gameMode, isBlitzMode, sessionScores, names,
             timers, roomCode, isPaused
         };
         localStorage.setItem('ult_ttt_state', JSON.stringify(state));
@@ -694,7 +501,7 @@ function loadState(stateString = null) {
         board = state.board; macroBoard = state.macroBoard;
         activeMacro = state.activeMacro; selectedMacro = state.selectedMacro;
         currentPlayer = state.currentPlayer; startingPlayer = state.startingPlayer;
-        isStrictRules = state.isStrictRules; isBlitzMode = state.isBlitzMode;
+        isBlitzMode = state.isBlitzMode;
         sessionScores = state.sessionScores; names = state.names;
         timers = state.timers; isPaused = state.isPaused;
         
@@ -712,8 +519,20 @@ function clearState() {
     gameMode = 'menu'; roomCode = ''; selectedMacro = -1; activeMacro = -1;
 }
 
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        lastHeartbeat = Date.now();
+        if (peer && peer.disconnected && !peer.destroyed) {
+            peer.reconnect();
+        }
+        if (conn && conn.open) {
+            conn.send({ type: 'pong' }); 
+        }
+    }
+});
+
 // ==========================================
-// 4. UI & FULLSCREEN
+// 3. UI, DYNAMIC HUD & FULLSCREEN
 // ==========================================
 function toggleFullscreen() {
     resumeAudio();
@@ -775,12 +594,14 @@ function updateHUD() {
 
     document.getElementById('player-wrap-bottom').classList.toggle('inactive-player', currentPlayer !== bottomPlayer);
     document.getElementById('player-wrap-bottom').classList.toggle('is-active', currentPlayer === bottomPlayer);
+    
     document.getElementById('player-wrap-top').classList.toggle('inactive-player', currentPlayer !== topPlayer);
     document.getElementById('player-wrap-top').classList.toggle('is-active', currentPlayer === topPlayer);
 
     const symBot = document.getElementById('symbol-bottom');
     symBot.innerHTML = `${bottomPlayer} <span class="hud-score">(<span id="score-bottom">${sessionScores[bottomPlayer]}</span>)</span>`;
     symBot.style.color = `var(--${bottomPlayer.toLowerCase()}-color)`;
+    
     document.getElementById('name-bottom').style.color = `var(--${bottomPlayer.toLowerCase()}-color)`;
     document.getElementById('text-name-bottom').innerText = names[bottomPlayer];
     document.getElementById('time-bottom').innerText = formatTime(timers[bottomPlayer]);
@@ -788,6 +609,7 @@ function updateHUD() {
     const symTop = document.getElementById('symbol-top');
     symTop.innerHTML = `${topPlayer} <span class="hud-score">(<span id="score-top">${sessionScores[topPlayer]}</span>)</span>`;
     symTop.style.color = `var(--${topPlayer.toLowerCase()}-color)`;
+    
     document.getElementById('name-top').style.color = `var(--${topPlayer.toLowerCase()}-color)`;
     document.getElementById('text-name-top').innerText = names[topPlayer];
     document.getElementById('time-top').innerText = formatTime(timers[topPlayer]);
@@ -817,7 +639,7 @@ function updateUI() {
 
     for (let m = 0; m < 9; m++) {
         const microEl = document.getElementById(`macro-${m}`);
-        const isPlayable = macroBoard[m] === null || (isStrictRules && hasEmptyCells(m));
+        const isPlayable = macroBoard[m] === null;
         microEl.classList.remove('active', 'inactive', 'x-turn', 'o-turn');
         
         if ((activeMacro === -1 || activeMacro === m) && isPlayable && !isGameOver) {
@@ -830,8 +652,7 @@ function updateUI() {
         if (macroBoard[m] === 'X' || macroBoard[m] === 'O') {
             microEl.classList.add('won');
             if(!overlay.innerHTML) overlay.innerHTML = getSVG(macroBoard[m]);
-            if (isStrictRules && hasEmptyCells(m)) overlay.classList.add('strict-pass');
-            else overlay.classList.remove('strict-pass');
+            
         } else if (macroBoard[m] === 'TIE') {
             microEl.classList.add('won');
             if(!overlay.innerHTML) overlay.innerHTML = `<span class="pop-anim" style="font-size:3rem; color:#94A3B8; font-weight:900;">—</span>`;
@@ -853,7 +674,6 @@ function updateUI() {
 }
 
 document.getElementById('game-area').addEventListener('click', () => {
-    resetActivity();
     if (selectedMacro !== -1) { selectedMacro = -1; updateUI(); saveState(); }
 });
 
@@ -872,19 +692,18 @@ function toggleMute() {
 }
 
 // ==========================================
-// 5. GAME LOGIC
+// 4. GAME LOGIC & TIMERS
 // ==========================================
 function hasEmptyCells(m) { return board[m].includes(null); }
 
 function handleCellClick(m, c) {
-    resumeAudio(); resetActivity();
+    resumeAudio();
     if (gameMode !== 'local' && currentPlayer !== mySymbol) return; 
     if (checkMacroWinCondition() || isPaused || isDisconnected) return; 
 
     if (selectedMacro === -1) {
         if (activeMacro !== -1 && activeMacro !== m) return shakeError(m, c);
-        if (macroBoard[m] && !isStrictRules) return shakeError(m, c);
-        if (macroBoard[m] && isStrictRules && !hasEmptyCells(m)) return shakeError(m, c);
+        if (macroBoard[m]) return shakeError(m, c); 
         selectedMacro = m; updateUI(); saveState(); return;
     }
 
@@ -892,7 +711,6 @@ function handleCellClick(m, c) {
     if (board[m][c] !== null) return shakeError(m, c);
 
     let moveAuthor = currentPlayer; 
-    logEvent('GAME', `Move made by ${moveAuthor} at [${m},${c}]`);
     executeMove(m, c, moveAuthor);
     
     if (gameMode !== 'local' && conn && conn.open) {
@@ -913,11 +731,10 @@ function executeMove(m, c, p, syncTime = null) {
         else if (!hasEmptyCells(m)) macroBoard[m] = 'TIE';
     }
 
-    if (macroBoard[c] !== null && !isStrictRules) activeMacro = -1;
-    else if (macroBoard[c] !== null && isStrictRules && !hasEmptyCells(c)) activeMacro = -1; 
+    if (macroBoard[c] !== null) activeMacro = -1;
     else activeMacro = c;
 
-    if (activeMacro === -1) selectedMacro = -1; else selectedMacro = activeMacro;            
+    if (activeMacro === -1) selectedMacro = -1; else selectedMacro = activeMacro;           
     currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
     
     saveState(); updateUI();
@@ -964,16 +781,35 @@ function formatTime(s) {
     return `${m.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
+function startTimers() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if (isPaused || checkMacroWinCondition() || isDisconnected) return;
+        if (isBlitzMode) {
+            timers[currentPlayer]--;
+            if (timers[currentPlayer] <= 0) {
+                timers[currentPlayer] = 0; updateHUD();
+                const winner = currentPlayer === 'X' ? 'O' : 'X';
+                
+                if (gameMode === 'local' || currentPlayer === mySymbol) {
+                    if (gameMode !== 'local' && conn && conn.open) conn.send({ type: 'timeout_loss' });
+                    endGame(winner, null, 'Time out!');
+                }
+            }
+        } else { timers[currentPlayer]++; }
+        updateHUD(); saveState();
+    }, 1000);
+}
+
 function togglePause() {
-    resumeAudio(); isPaused = !isPaused; resetActivity();
-    if (isPaused) { hideOverlays(); document.getElementById('overlay-pause').classList.add('visible'); } 
-    else { hideOverlays(); }
+    resumeAudio(); isPaused = !isPaused;
+    if (isPaused) { clearInterval(timerInterval); hideOverlays(); document.getElementById('overlay-pause').classList.add('visible'); } 
+    else { hideOverlays(); startTimers(); }
     saveState();
 }
 
 function endGame(result, line = null, reason = null) {
-    logEvent('GAME', `Match ended. Result: ${result}. Reason: ${reason}`);
-    stopGameLoop(); clearDisconnectLogic(); saveState();
+    clearInterval(timerInterval); clearDisconnectLogic(); saveState();
     if (result !== 'TIE') { sfx.winMacro(); sessionScores[result]++; if(line) drawWinLine(line); }
     updateUI(); 
     
@@ -995,76 +831,88 @@ function resetGame(isRematch=false) {
     startingPlayer = isRematch ? (startingPlayer === 'X' ? 'O' : 'X') : 'X';
     currentPlayer = startingPlayer;
     if (isBlitzMode) timers = { X: BLITZ_START_SEC, O: BLITZ_START_SEC }; else timers = { X: 0, O: 0 };
-    
-    initBoardDOM(); updateUI(); hideMessage(); 
-    resetActivity(); startGameLoop(); saveState();
-    logEvent('GAME', `Game Reset. Starting Player: ${startingPlayer}`);
+    initBoardDOM(); updateUI(); hideMessage(); startTimers(); saveState();
 }
 
 // ==========================================
-// 6. NETWORKING ENGINE
+// 5. NETWORKING & HEARTBEAT ENGINE
 // ==========================================
 function setStatus(status) { document.getElementById('connection-status').className = status; }
 
 function clearDisconnectLogic() {
+    clearInterval(heartbeatInterval);
+    clearTimeout(disconnectGraceTimeout);
+    clearInterval(disconnectCountdownInterval);
     isDisconnected = false;
-    disconnectSeconds = 0;
 }
 
-function bindPeerEvents(p) {
-    p.on('disconnected', () => {
-        logEvent('PEER', 'Disconnected from signaling server. P2P channel may still be alive. Attempting to restore signaling connection...');
-        if (!p.destroyed) {
-            p.reconnect();
+function startHeartbeat() {
+    clearDisconnectLogic();
+    lastHeartbeat = Date.now();
+    
+    heartbeatInterval = setInterval(() => {
+        if (gameMode === 'local' || gameMode === 'menu' || checkMacroWinCondition() !== null) return;
+        
+        if (conn && conn.open) { conn.send({ type: 'ping' }); }
+        const timeSinceLastPulse = Date.now() - lastHeartbeat;
+        
+        if (timeSinceLastPulse > 12000 && !isDisconnected) {
+            isDisconnected = true; setStatus('disconnected'); handleDisconnect();
+        } 
+        else if (timeSinceLastPulse <= 12000 && isDisconnected) {
+            isDisconnected = false; setStatus('connected');
+            clearTimeout(disconnectGraceTimeout); clearInterval(disconnectCountdownInterval);
+            hideMessage(); document.getElementById('overlay-reconnect').classList.remove('visible');
+            startTimers(); 
         }
-    });
+    }, 2000);
+}
 
-    p.on('error', (err) => {
-        logEvent('PEER_ERR', `Type: ${err.type}, Message: ${err.message}`);
-        if(err.type === 'unavailable-id') { 
-            p.destroy(); 
-            if(gameMode === 'host') {
-                setTimeout(() => tryHost(roomCode), 2000); 
+function handleDisconnect() {
+    disconnectGraceTimeout = setTimeout(() => {
+        let timeLeft = 60;
+        document.getElementById('reconnect-time-display').innerText = timeLeft;
+        hideOverlays(); document.getElementById('overlay-reconnect').classList.add('visible');
+        
+        disconnectCountdownInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('reconnect-time-display').innerText = timeLeft;
+            
+            if(timeLeft <= 0) {
+                clearDisconnectLogic();
+                endGame(mySymbol, null, "Opponent abandoned the match!");
+            } else {
+                if (gameMode === 'join' && timeLeft % 3 === 0) {
+                    tryJoinReconnect(false);
+                }
             }
-        } else {
-            showMessage('Network Error', err.message, 
-                `<button class="btn secondary" onclick="cancelSetup()">Back</button>
-                 <button class="btn secondary" style="margin-top: 5px; border-color: var(--o-color); color: var(--o-color);" onclick="copyErrorReport()">📋 Copy Report</button>`, false);
-        }
-    });
+        }, 1000);
+    }, 2500);
 }
 
 function bindDataListeners() {
-    conn.on('close', () => { 
-        logEvent('CONN', 'Data channel closed.');
-        if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); } 
-    });
-    
-    conn.on('error', (err) => { 
-        logEvent('CONN_ERR', `Error: ${err.message || err}`);
-        if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); } 
-    });
+    conn.on('close', () => { if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); handleDisconnect(); } });
+    conn.on('error', () => { if (!isDisconnected) { isDisconnected = true; setStatus('disconnected'); handleDisconnect(); } });
 
     conn.on('data', (data) => {
         switch(data.type) {
-            case 'ping': conn.send({ type: 'pong' }); logEvent('NET', 'Recv Ping, Sent Pong'); break;
-            case 'pong': lastHeartbeat = Date.now(); logEvent('NET', 'Recv Pong'); break;
+            case 'ping': conn.send({ type: 'pong' }); break;
+            case 'pong': lastHeartbeat = Date.now(); break;
             
             case 'init_game':
                 names.X = data.hostName || 'Player X'; names.O = data.joinName || 'Player O';
-                isStrictRules = data.strict; isBlitzMode = data.blitz;
+                isBlitzMode = data.blitz;
                 hideOverlays(); resetGame(); break;
             case 'join_info':
                 names.O = data.name || 'Player O';
                 if (names.X.toLowerCase() === names.O.toLowerCase()) { names.X += ' (X)'; names.O += ' (O)'; }
-                conn.send({ type: 'init_game', hostName: names.X, joinName: names.O, strict: isStrictRules, blitz: isBlitzMode });
+                conn.send({ type: 'init_game', hostName: names.X, joinName: names.O, blitz: isBlitzMode });
                 hideOverlays(); resetGame(); break;
             case 'sync_state':
                 if (data.state) {
-                    logEvent('NET', 'State synchronized from host.');
                     loadState(data.state); 
                     saveState(); 
-                    initBoardDOM(); updateUI(); startGameLoop();
+                    initBoardDOM(); updateUI(); startTimers();
                 }
                 break;
             case 'reconnect_ping':
@@ -1072,13 +920,12 @@ function bindDataListeners() {
                 lastHeartbeat = Date.now();
                 break;
             case 'move': 
-                logEvent('NET', `Recv Move from ${data.p} to [${data.m},${data.c}]`);
                 executeMove(data.m, data.c, data.p, data.syncTime); 
                 break;
             case 'timeout_loss': endGame(mySymbol, null, "Opponent ran out of time!"); break;
             case 'explicit_quit': 
                 clearDisconnectLogic();
-                endGame(mySymbol, null, "Opponent forfeited the match.");
+                showMessage('Match Ended', 'Opponent forfeited the match.', `<button class="btn primary" onclick="explicitQuit()">Main Menu</button>`, false);
                 break;
             case 'request_rematch':
                 showMessage('Rematch Request', `${mySymbol==='X'?names.O:names.X} wants a rematch!`, 
@@ -1094,30 +941,29 @@ function bindDataListeners() {
 }
 
 function setupConnection() {
-    logEvent('SYS', 'SetupConnection executed. Game ready.');
     setStatus('connected'); 
     hideMessage(); 
     document.getElementById('overlay-reconnect').classList.remove('visible');
-    clearDisconnectLogic();
-    lastHeartbeat = Date.now();
-    startGameLoop();
+    startHeartbeat();
 }
 
 function tryHost(existingCode = null) {
     roomCode = existingCode || Math.floor(1000 + Math.random() * 9000).toString();
-    logEvent('HOST', `Initializing room: ${roomCode}`);
     peer = new Peer(PEER_PREFIX + roomCode, peerConfig);
-    bindPeerEvents(peer);
-
     peer.on('open', () => { document.getElementById('display-room-code').innerText = roomCode; });
+    peer.on('error', (err) => {
+        if(err.type === 'unavailable-id') { 
+            peer.destroy(); 
+            if(existingCode) setTimeout(() => tryHost(existingCode), 2000); 
+            else tryHost(); 
+        } else showMessage('Error', err.message, `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false);
+    });
     
     peer.on('connection', (connection) => { 
-        logEvent('HOST', 'Inbound connection received.');
         conn = connection; 
         bindDataListeners(); 
         
         const onReady = () => {
-            logEvent('HOST', 'Data channel open and ready.');
             setupConnection(); 
             if(existingCode) { 
                 conn.send({ type: 'sync_state', state: localStorage.getItem('ult_ttt_state') });
@@ -1130,11 +976,11 @@ function tryHost(existingCode = null) {
 }
 
 function initHost() {
-    resumeAudio(); clearState(); resetActivity(); debugLog.length = 0;
+    resumeAudio(); clearState();
     let n = document.getElementById('input-player-name').value.trim();
     names.X = n ? n : 'Player X';
     names.O = 'Player O'; 
-    isStrictRules = document.getElementById('toggle-strict').checked; isBlitzMode = document.getElementById('toggle-timer').checked;
+    isBlitzMode = document.getElementById('toggle-timer').checked;
     gameMode = 'host'; mySymbol = 'X';
     hideOverlays(); document.getElementById('overlay-waiting').classList.add('visible'); tryHost();
 }
@@ -1144,12 +990,13 @@ function showTutorial() { resumeAudio(); hideOverlays(); document.getElementById
 function closeTutorial() { resumeAudio(); hideOverlays(); document.getElementById('overlay-menu').classList.add('visible'); }
 
 function initJoin() {
-    resumeAudio(); clearState(); resetActivity(); debugLog.length = 0;
+    resumeAudio(); clearState();
     const code = document.getElementById('input-room-code').value.trim();
     if (!/^\d{4}$/.test(code)) return document.getElementById('join-error').innerText = "Enter a 4-digit code.";
     let n = document.getElementById('input-player-name').value.trim();
     names.O = n ? n : 'Player O';
     gameMode = 'join'; mySymbol = 'O'; roomCode = code;
+    joinAttempts = 0;
     hideOverlays(); showMessage('Connecting...', 'Finding host...', '', false);
     tryJoinReconnect(true); 
 }
@@ -1157,33 +1004,48 @@ function initJoin() {
 function tryJoinReconnect(isFirstTime = false) {
     if (isConnecting) return;
     isConnecting = true;
-    logEvent('JOIN', `Attempting to connect to ${roomCode}... First time: ${isFirstTime}`);
+    joinAttempts++;
     try { if(peer) peer.destroy(); } catch(e){}
+    
+    if (isFirstTime && joinAttempts > 1) {
+        document.getElementById('msg-desc').innerText = `Attempting to reach host... (Try ${joinAttempts})`;
+    }
     
     setTimeout(() => {
         peer = new Peer(peerConfig);
-        bindPeerEvents(peer);
-
         peer.on('open', () => {
-            logEvent('JOIN', 'Connected to Peer signaling server. Dialing host...');
             conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
             bindDataListeners(); 
             
             conn.on('open', () => {
-                logEvent('JOIN', 'Data channel to host opened.');
                 isConnecting = false;
                 setupConnection();
                 if(isFirstTime) conn.send({ type: 'join_info', name: names.O });
                 else { conn.send({ type: 'reconnect_ping' }); lastHeartbeat = Date.now(); }
             });
-            conn.on('error', () => { logEvent('CONN', 'Join dial error.'); isConnecting = false; });
-            conn.on('close', () => { logEvent('CONN', 'Join dial closed.'); isConnecting = false; });
+            conn.on('error', () => { isConnecting = false; });
+            conn.on('close', () => { isConnecting = false; });
+        });
+        
+        peer.on('error', (err) => { 
+            isConnecting = false; 
+            if(isFirstTime) {
+                // ADDED: Relentless Dialing Protocol. Keep trying instead of failing natively.
+                if (err.type === 'peer-unavailable' || err.type === 'network' || err.type === 'server-error') {
+                    if (joinAttempts === 1) document.getElementById('msg-desc').innerText = "Waiting for host to wake up...";
+                    joinRetryTimeout = setTimeout(() => {
+                        if (gameMode === 'join') tryJoinReconnect(true);
+                    }, 3500);
+                } else {
+                    showMessage('Error', err.message, `<button class="btn secondary" onclick="cancelSetup()">Back</button>`, false);
+                }
+            }
         });
     }, 100);
 }
 
 function requestQuit() {
-    resumeAudio(); resetActivity();
+    resumeAudio();
     showMessage('Quit Match?', 'Are you sure you want to forfeit?', 
         `<button class="btn danger" onclick="explicitQuit(true)">Yes, Quit</button>
          <button class="btn secondary" onclick="hideMessage()">Cancel</button>`, false);
@@ -1191,8 +1053,8 @@ function requestQuit() {
 
 function cancelSetup() {
     resumeAudio();
-    stopGameLoop();
     isConnecting = false;
+    clearTimeout(joinRetryTimeout); 
     try { if (conn) { conn.close(); conn = null; } if (peer) { peer.destroy(); peer = null; } } catch(e) {}
     clearDisconnectLogic(); clearState();
     document.getElementById('input-room-code').value = ''; document.getElementById('join-error').innerText = '';
@@ -1207,7 +1069,7 @@ function explicitQuit(sendPayload = false) {
 }
 
 function requestRematch() {
-    resumeAudio(); resetActivity();
+    resumeAudio();
     if (gameMode === 'local') return startLocalPlay(true);
     showMessage('Waiting...', 'Asking opponent for a rematch...', '', false);
     conn.send({ type: 'request_rematch' });
@@ -1215,12 +1077,10 @@ function requestRematch() {
 function acceptRematch() { resumeAudio(); conn.send({ type: 'accept_rematch' }); resetGame(true); }
 function declineRematch() { resumeAudio(); if (conn && conn.open) conn.send({ type: 'decline_rematch' }); explicitQuit(); }
 
-// UPDATED: Now completely ignores the input box when playing locally
 function startLocalPlay(isRematch=false) {
-    resumeAudio(); clearState(); gameMode = 'local'; resetActivity();
-    names.X = 'Player X'; 
-    names.O = 'Player O';
-    isStrictRules = document.getElementById('toggle-strict').checked; 
+    resumeAudio(); clearState(); gameMode = 'local';
+    let n = document.getElementById('input-player-name').value.trim();
+    names.X = n ? n + " (X)" : 'Player X'; names.O = n ? n + " (O)" : 'Player O';
     isBlitzMode = document.getElementById('toggle-timer').checked;
     hideOverlays(); document.getElementById('connection-status').style.display = 'none'; resetGame(isRematch);
 }
@@ -1244,7 +1104,7 @@ window.onload = () => {
         if (gameMode === 'local') {
             hideOverlays();
             if (checkMacroWinCondition()) endGame(checkMacroWinCondition().winner, checkMacroWinCondition().line, "Resumed", true);
-            else startGameLoop();
+            else startTimers();
         } else if (gameMode === 'host' || gameMode === 'join') {
             hideOverlays();
             if (checkMacroWinCondition()) endGame(checkMacroWinCondition().winner, checkMacroWinCondition().line, "Resumed", true);
